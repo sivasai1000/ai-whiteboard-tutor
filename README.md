@@ -2,9 +2,11 @@
 
 A focused learning space: enter a topic, generate a short lesson, and listen while an interactive whiteboard explains it step by step. Built for the Braynix Studios AI Whiteboard Tutor assignment.
 
+**Live demo:** [ai-whiteboard-tutor-amber.vercel.app](https://ai-whiteboard-tutor-amber.vercel.app) · **Source:** [sivasai1000/ai-whiteboard-tutor](https://github.com/sivasai1000/ai-whiteboard-tutor)
+
 ## Run locally
 
-Prerequisites: Node.js 22.12+ (Node 24 recommended), npm, and an OpenAI API account with credits and access to the configured models.
+Prerequisites: Node.js 24.x, npm, and an OpenAI API account with credits and access to the configured models.
 
 ```bash
 npm ci
@@ -178,7 +180,15 @@ The suite covers validated lesson data, malformed requests, cross-origin request
 
 Conversation tests run the actual AI SDK against a controlled provider and test the browser against an HTTP SSE fixture. They verify that the first text arrives before completion, cancellation reaches the provider/HTTP connection, provider errors are redacted, context is bounded, retry preserves one question, conversations survive reload, deletion works, and mobile navigation isolates active streams. These tests do not spend API credits.
 
-**Mocked API tests and the sample preview do not verify live provider access.** Before submitting, use your actual key to generate a fresh topic, play every chapter, seek both ways, ask a follow-up, reload, and replay. Check that the voice and diagrams match the explanation.
+Verified on 17 November 2026:
+
+- 51 unit/integration tests, 12 browser scenarios and the production build passed.
+- A fresh photosynthesis lesson generated through the public Vercel UI produced six chapters with **2:00 of actual narration**. All lesson, speech and follow-up requests returned HTTP 200.
+- Playback, chapter seeking, restart and reload with cached audio worked on the deployment. No browser runtime errors were recorded.
+- The deployed AI conversation endpoint returned `text/event-stream`; a real answer streamed into the UI and survived refresh. Desktop and mobile layouts were checked.
+- A separate live binary-search lesson produced 1:58 of narration during local end-to-end verification.
+
+**Mocked API tests and the sample preview do not verify live provider access.** Repeat the real flow after changing credentials, models or hosting configuration: generate a fresh topic, play the chapters, seek both ways, ask a follow-up, reload and replay. Check that the voice and diagrams match the explanation.
 
 ## Deploy on Vercel
 
@@ -191,7 +201,7 @@ Conversation tests run the actual AI SDK against a controlled provider and test 
 
 Alternatively, use `npx vercel` for project setup and `npx vercel --prod` to publish after configuring environment variables. The voice route uses the Node.js runtime and an **outbound** WebSocket connection; the browser receives a normal HTTP response containing WAV audio.
 
-**Live demo:** deployment pending account connection. Replace this line with the verified production URL before submitting.
+The production demo is deployed at [ai-whiteboard-tutor-amber.vercel.app](https://ai-whiteboard-tutor-amber.vercel.app). The application uses Node.js 24 on Vercel; credentials are configured as server-side environment variables. The production URL is publicly accessible without a Vercel login.
 
 ## Known limitations
 

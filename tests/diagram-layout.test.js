@@ -54,4 +54,30 @@ describe("nested diagram headings", () => {
       shapeLabelPosition(container, [container, { ...middle, text: "" }]),
     ).toEqual({ x: 480, y: 230 });
   });
+
+  it("separates a box heading from a later annotation inside the box", () => {
+    const air = {
+      id: "air",
+      type: "rect",
+      x: 120,
+      y: 190,
+      width: 190,
+      height: 110,
+      text: "Air",
+    };
+    const annotation = {
+      id: "co2",
+      type: "text",
+      x: 215,
+      y: 245,
+      text: "Carbon dioxide (CO₂)",
+      appearAt: 0.2,
+    };
+    const position = shapeLabelPosition(air, [air, annotation]);
+    expect(position).toEqual({ x: 215, y: 172 });
+    expect(annotation.y - position.y).toBeGreaterThan(50);
+    expect(
+      shapeLabelPosition(air, [air, { ...annotation, y: 350 }]),
+    ).toEqual({ x: 215, y: 245 });
+  });
 });
