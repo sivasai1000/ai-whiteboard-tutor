@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { prepareConversationMessages } from "@/lib/conversation-schema";
@@ -26,7 +25,6 @@ const transport = new DefaultChatTransport({
 });
 
 export function useConversationChat(conversation) {
-  const router = useRouter();
   const { create, update, remove, storageError } = useConversations();
   const [input, setInput] = useState("");
   const [saving, setSaving] = useState(false);
@@ -86,9 +84,12 @@ export function useConversationChat(conversation) {
       });
       await update(conversation.id, [...messages, message]);
       if (!mounted.current) return;
+      // This is a same-page query change. Native history updates synchronously
+      // and integrates with Next's useSearchParams without waiting for an RSC
+      // navigation that a fast stream could delay until after a page refresh.
+      window.history.replaceState(null, "", `/ai?chat=${conversation.id}`);
       setInput("");
       void sendMessage(message);
-      router.replace(`/ai?chat=${conversation.id}`, { scroll: false });
     } catch {
       // The provider exposes storage errors beside the composer.
     } finally {
@@ -108,7 +109,7 @@ export function useConversationChat(conversation) {
     stop();
     try {
       await remove(conversation.id);
-      router.replace(`/ai?new=${crypto.randomUUID()}`);
+      window.history.replaceState(null, "", `/ai?new=${crypto.randomUUID()}`);
     } catch {
       /* Storage error is visible in the workspace. */
     }

@@ -39,6 +39,40 @@ function request(
 }
 
 describe("request validation", () => {
+  it("accepts the actual Host when Next reconstructs localhost and rejects unrelated origins", () => {
+    expect(() =>
+      assertSameOrigin(
+        request(
+          {},
+          { Host: "127.0.0.1:3000", Origin: "http://127.0.0.1:3000" },
+        ),
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertSameOrigin(
+        request(
+          {},
+          {
+            Host: "127.0.0.1:3000",
+            Origin: "https://attacker.example",
+            "X-Forwarded-Host": "attacker.example",
+          },
+        ),
+      ),
+    ).toThrow();
+    expect(() =>
+      assertSameOrigin(
+        request(
+          {},
+          {
+            Host: "127.0.0.1:3000",
+            Origin: "http://127.0.0.1:3000",
+            "Sec-Fetch-Site": "cross-site",
+          },
+        ),
+      ),
+    ).toThrow();
+  });
   it("trims a topic and defaults the level", () => {
     expect(lessonRequestSchema.parse({ topic: "  Fractions  " })).toEqual({
       topic: "Fractions",

@@ -6,7 +6,7 @@ Brand: Luma — a little clarity, on any topic. Native Next.js App Router, React
 
 Lesson: { id, topic, title, summary, level: 'Beginner'|'Intermediate', createdAt (ISO), saved (boolean), source: 'ai'|'sample', scenes: Scene[], messages: Message[] }.
 Scene: { id, title, narration, duration (estimated seconds initially, measured after audio), elements: Element[], speechToken? }.
-Element: { id, type: 'text'|'rect'|'circle'|'line'|'arrow'|'equation', x, y, width, height, text, color: 'violet'|'cyan'|'amber'|'green'|'white'|'muted', appearAt (0..1), points: string }. Coordinates in 960x540 viewBox; x/y position, width/height dimensions, for line/arrow endpoint = x+width,y+height. circle x/y = center, width = diameter. All properties present even unused (empty string or 0). Text labels concise, no raw SVG/HTML/JS. Scene boards independent; derive state from time. At least 6 scenes, 240–290 words total, about 120 seconds.
+Element: { id, type: 'text'|'rect'|'circle'|'line'|'arrow'|'equation', x, y, width, height, text, color: 'violet'|'cyan'|'amber'|'green'|'white'|'muted', appearAt (0..1), points: string }. Coordinates in 960x540 viewBox; x/y position, width/height dimensions, for line/arrow endpoint = x+width,y+height. circle x/y = center, width = diameter. All properties present even unused (empty string or 0). Text labels concise, no raw SVG/HTML/JS. Scene boards independent; derive state from time. At least 6 scenes, 290–320 words total, about 120 seconds. The renderer places container headings above nested labelled shapes to keep their labels separate.
 Message: { id, role: 'user'|'assistant', content }.
 Audio map: { [sceneId]: { blob: Blob, duration: number } }. Stored in IndexedDB alongside lessons. Client never stores API secrets.
 

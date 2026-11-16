@@ -20,7 +20,10 @@ export function NewChatLink({ onClick, ...props }) {
         )
           return;
         event.preventDefault();
-        router.push(`/ai?new=${crypto.randomUUID()}`);
+        const href = `/ai?new=${crypto.randomUUID()}`;
+        if (window.location.pathname === "/ai")
+          window.history.pushState(null, "", href);
+        else router.push(href);
       }}
     />
   );

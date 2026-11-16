@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { boardColors, lessonStyles as s } from "./style";
 import { visibleElements } from "./timeline";
+import { shapeLabelPosition } from "./diagram-layout";
 
-function DiagramElement({ element, progress, markerId }) {
+function DiagramElement({ element, elements, progress, markerId }) {
   const { type, x, y, width, height, text, appearAt } = element;
   const color = boardColors[element.color] || boardColors.white;
   const reveal = Math.min(1, Math.max(0, (progress - appearAt) / 0.035));
@@ -39,8 +40,7 @@ function DiagramElement({ element, progress, markerId }) {
     );
   }
   if (type === "circle" || type === "rect") {
-    const labelX = type === "circle" ? x : x + width / 2;
-    const labelY = type === "circle" ? y : y + height / 2;
+    const { x: labelX, y: labelY } = shapeLabelPosition(element, elements);
     return (
       <g>
         {type === "circle" ? (
@@ -204,6 +204,7 @@ export function Whiteboard({ scene, progress }) {
             <DiagramElement
               key={`${scene.id}-${element.id}`}
               element={element}
+              elements={scene.elements}
               progress={progress}
               markerId={uid}
             />

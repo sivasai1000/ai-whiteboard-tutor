@@ -24,7 +24,20 @@ export function assertSameOrigin(request) {
       403,
     );
   }
-  const allowed = new Set([new URL(request.url).origin]);
+  const requestUrl = new URL(request.url);
+  const allowed = new Set([requestUrl.origin]);
+  // Next.js can reconstruct a local request URL with "localhost" even when
+  // the browser used 127.0.0.1. Host retains the actual HTTP request authority.
+  // Never trust arbitrary X-Forwarded-Host values from the client.
+  const host = request.headers.get("host");
+  if (host) {
+    try {
+      const hostUrl = new URL(`${requestUrl.protocol}//${host}`);
+      if (hostUrl.host === host.toLowerCase()) allowed.add(hostUrl.origin);
+    } catch {
+      /* A malformed Host never adds an allowed origin. */
+    }
+  }
   if (process.env.APP_ORIGIN) {
     try {
       allowed.add(new URL(process.env.APP_ORIGIN).origin);
