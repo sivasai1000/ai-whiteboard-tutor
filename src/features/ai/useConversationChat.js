@@ -1,0 +1,149 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { prepareConversationMessages } from "@/lib/conversation-schema";
+import { useConversations } from "./ConversationProvider";
+
+const transport = new DefaultChatTransport({
+  api: "/api/conversations",
+  prepareSendMessagesRequest: ({ messages }) => ({
+    body: { messages: prepareConversationMessages(messages) },
+  }),
+  fetch: async (url, options) => {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      const data = await response.json().catch(() => null);
+      throw new Error(
+        data?.error?.message || "The connection failed. Please try again.",
+      );
+    }
+    return response;
+  },
+});
+
+export function useConversationChat(conversation) {
+  const router = useRouter();
+  const { create, update, remove, storageError } = useConversations();
+  const [input, setInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState("");
+  const sending = useRef(false);
+  const mounted = useRef(true);
+  const persisted = useRef(JSON.stringify(conversation.messages));
+
+  const chat = useChat({
+    id: conversation.id,
+    messages: conversation.messages,
+    transport,
+    throttle: 50,
+    onFinish: ({ isAbort, isDisconnect, isError, finishReason }) => {
+      if (isAbort)
+        setNotice("Response stopped. You can retry or send another message.");
+      else if (isDisconnect || isError)
+        setNotice(
+          "The response was interrupted. Try again to get a complete answer.",
+        );
+      else if (finishReason === "length")
+        setNotice(
+          "The answer reached its length limit. Ask Luma to continue if you need more detail.",
+        );
+    },
+  });
+  const { messages, status, sendMessage, stop, regenerate, clearError } = chat;
+  const busy = saving || status === "submitted" || status === "streaming";
+  const latest = useRef(messages);
+  latest.current = messages;
+
+  useEffect(() => {
+    const serialized = JSON.stringify(messages);
+    if (!messages.length || serialized === persisted.current) return;
+    const timer = setTimeout(
+      () => {
+        update(conversation.id, messages)
+          .then(() => {
+            persisted.current = serialized;
+          })
+          .catch(() => {});
+      },
+      busy ? 350 : 0,
+    );
+    return () => clearTimeout(timer);
+  }, [conversation.id, messages, busy, update]);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      stop();
+      if (latest.current.length)
+        update(conversation.id, latest.current).catch(() => {});
+    };
+  }, [conversation.id, stop, update]);
+
+  async function send(text) {
+    if (busy || sending.current || storageError || messages.length >= 80)
+      return;
+    sending.current = true;
+    setSaving(true);
+    setNotice("");
+    clearError();
+    const message = {
+      id: crypto.randomUUID(),
+      role: "user",
+      parts: [{ type: "text", text }],
+    };
+    try {
+      // Persist the question before making a paid request. The active chat keeps
+      // the same ID when its URL changes, so navigation never restarts a stream.
+      await create({
+        ...conversation,
+        title: text.replace(/\s+/g, " ").slice(0, 72),
+        messages: [message],
+      });
+      await update(conversation.id, [...messages, message]);
+      if (!mounted.current) return;
+      setInput("");
+      void sendMessage(message);
+      router.replace(`/ai?chat=${conversation.id}`, { scroll: false });
+    } catch {
+      // The provider exposes storage errors beside the composer.
+    } finally {
+      sending.current = false;
+      setSaving(false);
+    }
+  }
+
+  function retry() {
+    if (busy || storageError) return;
+    setNotice("");
+    clearError();
+    void regenerate();
+  }
+
+  async function deleteChat() {
+    stop();
+    try {
+      await remove(conversation.id);
+      router.replace(`/ai?new=${crypto.randomUUID()}`);
+    } catch {
+      /* Storage error is visible in the workspace. */
+    }
+  }
+
+  return {
+    ...chat,
+    busy,
+    preparing: saving,
+    input,
+    setInput,
+    send,
+    retry,
+    deleteChat,
+    notice,
+    storageError,
+    limitReached: messages.length >= 80,
+  };
+}

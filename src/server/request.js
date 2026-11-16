@@ -150,6 +150,14 @@ export async function handleApi(request, { schema, kind, maxBytes, handler }) {
     const result = await handler(parsed.data, {
       signal: AbortSignal.any([request.signal, AbortSignal.timeout(85_000)]),
     });
+    // Streaming handlers return their own Response. Preserve its SSE body and
+    // content type while applying the same session and request protections.
+    if (result instanceof Response) {
+      for (const [key, value] of Object.entries(headers)) {
+        if (!result.headers.has(key)) result.headers.set(key, value);
+      }
+      return result;
+    }
     return Response.json(result, { headers });
   } catch (error) {
     const safe = publicError(error);

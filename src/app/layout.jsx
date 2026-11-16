@@ -2,6 +2,7 @@ import "./globals.css";
 import { LessonProvider } from "@/features/library/LessonProvider";
 import { AppShell } from "@/components/layout/AppShell";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ConversationProvider } from "@/features/ai/ConversationProvider";
 
 export const metadata = {
   title: {
@@ -19,7 +20,9 @@ export default function RootLayout({ children }) {
       <body>
         <TooltipProvider>
           <LessonProvider>
-            <AppShell>{children}</AppShell>
+            <ConversationProvider>
+              <AppShell>{children}</AppShell>
+            </ConversationProvider>
           </LessonProvider>
         </TooltipProvider>
       </body>

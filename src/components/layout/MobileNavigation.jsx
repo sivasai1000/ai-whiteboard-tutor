@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Menu, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,10 +15,13 @@ import {
 import { AppSidebar } from "./AppSidebar";
 import { BrandMark } from "./Brand";
 import { NewLessonLink } from "./NewLessonLink";
+import { NewChatLink } from "@/features/ai/NewChatLink";
 import { layoutStyles as s } from "./style";
 
 export function MobileNavigation() {
   const [open, setOpen] = useState(false);
+  const isChat = usePathname() === "/ai";
+  const NewLink = isChat ? NewChatLink : NewLessonLink;
   return (
     <header className={s.mobileHeader}>
       <Sheet open={open} onOpenChange={setOpen}>
@@ -42,9 +46,9 @@ export function MobileNavigation() {
         luma
       </Link>
       <Button asChild size="icon" variant="ghost">
-        <NewLessonLink aria-label="New lesson">
+        <NewLink aria-label={isChat ? "New chat" : "New lesson"}>
           <Plus className="size-5" />
-        </NewLessonLink>
+        </NewLink>
       </Button>
     </header>
   );

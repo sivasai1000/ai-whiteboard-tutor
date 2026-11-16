@@ -28,6 +28,8 @@ Open **http://127.0.0.1:3000**. New AI lessons and follow-up answers require the
 - Play, pause, resume, seek, restart, replay, playback speed and chapter navigation.
 - Whiteboard zoom and scrolling for small screens.
 - AI follow-up chat that receives the current lesson as context.
+- A dedicated Claude-inspired **AI chat** at `/ai`, with new conversations, a history sidebar, Markdown/code responses, copy, stop, retry, regeneration and confirmed deletion.
+- Real Server-Sent Events (SSE) using the Vercel AI SDK; answers appear incrementally as they are generated.
 - Explore topics, lesson history, bookmarks and confirmed deletion.
 - Local persistence of lesson data, chat and narration in IndexedDB.
 - Dark responsive UI using Tailwind CSS, feature-level `style.js` files and shadcn/ui.
@@ -41,6 +43,8 @@ Open **http://127.0.0.1:3000**. New AI lessons and follow-up answers require the
 | Language            | JavaScript (`.jsx` components, `.js` logic)                           |
 | Styling             | Tailwind CSS v4 + shadcn/ui + local Inter font                        |
 | AI lessons and chat | OpenAI Responses API, configurable `gpt-6-luna` default               |
+| Conversation SDK    | Vercel AI SDK 7, `@ai-sdk/react` and `@ai-sdk/openai`                 |
+| Conversation UI     | Current shadcn AI Elements + Streamdown for streaming Markdown        |
 | Narration           | OpenAI Realtime API, configurable `gpt-realtime-2.1-mini` default     |
 | Graphics            | React-rendered SVG; the model returns data, never executable graphics |
 | Playback            | HTMLAudioElement + deterministic timeline functions                   |
@@ -58,10 +62,12 @@ src/
     api/lessons/             Generate a validated lesson
     api/speech/              Generate signed narration as WAV
     api/chat/                Answer a lesson-related question
+    api/conversations/       Stream a text conversation over SSE
     api/health/              Configuration status, never credentials
     explore/                 Topic discovery
     history/                 Lessons on this device
     saved/                   Bookmarked lessons
+    ai/                      User-facing AI conversation workspace
     lesson/[id]/             Interactive teaching workspace
     globals.css              Tailwind imports and shared theme tokens
   components/
@@ -73,6 +79,7 @@ src/
     lesson/                  Whiteboard, timeline, player and playback hook
     tutor/                   Follow-up conversation
     library/                 Lesson provider and library screens
+    ai/                      Conversation UI, history, persistence and chat hook
   server/                    OpenAI services, prompts, signing and request limits
   lib/                       Validation, browser storage and shared utilities
 tests/                       Unit, integration and browser tests
@@ -94,6 +101,23 @@ Pages compose feature components. Components render the interface. Hooks own bro
 The system synchronizes at chapter and scheduled visual-event level. Reveal times inside a chapter are proportional to its measured duration; they are **not word-level forced alignment**. The diagram plan asks the narrator to explain elements in reveal order. This tradeoff keeps playback deterministic and affordable while retaining clear visual teaching.
 
 See [architecture.md](docs/architecture.md) for the full flow and implementation walkthrough.
+
+## AI conversation module
+
+Open `/ai` or choose **AI chat** in the sidebar. This is a user-facing conversation workspace. The visual direction is inspired by Claude; responses use your configured OpenAI model and the same server-only `OPENAI_API_KEY` as the tutor. No separate Vercel AI Gateway account is required.
+
+The UI follows the current [shadcn AI Elements Chat](https://ui.shadcn.com/docs/ai-elements/base/chat) composition: Message Scroller, Message, Bubble and Input Group. These source components were installed through the shadcn CLI and adapted to the app's existing JavaScript/Tailwind theme. Feature styles remain in `src/features/ai/style.js`.
+
+1. `useChat` sends text-only conversation context through `DefaultChatTransport` to `/api/conversations`.
+2. The route validates the body and applies the existing origin checks, signed session cookie, request bounds and chat quotas.
+3. `streamConversation` calls `streamText` through the OpenAI provider. `toUIMessageStream` and `createUIMessageStreamResponse` return SSE events as generation proceeds; there is no artificial typing timer.
+4. Streamdown renders partial Markdown and code. The message scroller follows new output while allowing the user to read earlier messages.
+5. Stop aborts the browser request; the server forwards cancellation to the provider. Switching conversations also stops the old request. Retry/regenerate replaces the last answer without duplicating the question.
+6. Questions are saved before paid generation. Replies and partial responses are stored in IndexedDB, with a final flush when leaving the conversation.
+
+Up to **40 conversations** with **80 messages each** are saved on the current device. Only the latest 24 text messages, bounded to 48,000 characters, are sent as context. Each user message is limited to 4,000 characters; responses have a 1,800-token output budget. Old context can fall outside this window. Clearing browser data removes the chats. There is no server-side conversation sync, file upload, web browsing or tool execution in this module.
+
+The original lesson-specific follow-up endpoint remains separate from the general conversation workspace. Both share `DAILY_CHAT_LIMIT`, so adding the chat page does not introduce a second independent spending allowance.
 
 ## Environment variables
 
@@ -151,6 +175,8 @@ PLAYWRIGHT_CHANNEL=chrome npm run test:e2e
 Playwright starts the local server automatically if needed. To test an already-running production server, use `E2E_BASE_URL=https://your-deployment.example npm run test:e2e` (sample and mocked-provider scenarios only).
 
 The suite covers validated lesson data, malformed requests, cross-origin requests, token tampering/expiry, quota isolation, WAV generation, Realtime protocol handling, actual sample audio playback, pause/resume, seeking, restart/replay, storage, bookmark/delete flows, chat retries and mobile navigation/zoom.
+
+Conversation tests run the actual AI SDK against a controlled provider and test the browser against an HTTP SSE fixture. They verify that the first text arrives before completion, cancellation reaches the provider/HTTP connection, provider errors are redacted, context is bounded, retry preserves one question, conversations survive reload, deletion works, and mobile navigation isolates active streams. These tests do not spend API credits.
 
 **Mocked API tests and the sample preview do not verify live provider access.** Before submitting, use your actual key to generate a fresh topic, play every chapter, seek both ways, ask a follow-up, reload, and replay. Check that the voice and diagrams match the explanation.
 
