@@ -6,6 +6,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { prepareConversationMessages } from "@/lib/conversation-schema";
 import { useConversations } from "./ConversationProvider";
+import { useConversationPersistence } from "./useConversationPersistence";
 
 const transport = new DefaultChatTransport({
   api: "/api/conversations",
@@ -32,7 +33,6 @@ export function useConversationChat(conversation) {
   const [notice, setNotice] = useState("");
   const sending = useRef(false);
   const mounted = useRef(true);
-  const persisted = useRef(JSON.stringify(conversation.messages));
 
   const chat = useChat({
     id: conversation.id,
@@ -54,34 +54,15 @@ export function useConversationChat(conversation) {
   });
   const { messages, status, sendMessage, stop, regenerate, clearError } = chat;
   const busy = saving || status === "submitted" || status === "streaming";
-  const latest = useRef(messages);
-  latest.current = messages;
-
-  useEffect(() => {
-    const serialized = JSON.stringify(messages);
-    if (!messages.length || serialized === persisted.current) return;
-    const timer = setTimeout(
-      () => {
-        update(conversation.id, messages)
-          .then(() => {
-            persisted.current = serialized;
-          })
-          .catch(() => {});
-      },
-      busy ? 350 : 0,
-    );
-    return () => clearTimeout(timer);
-  }, [conversation.id, messages, busy, update]);
+  useConversationPersistence(conversation.id, messages, busy, update);
 
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
       stop();
-      if (latest.current.length)
-        update(conversation.id, latest.current).catch(() => {});
     };
-  }, [conversation.id, stop, update]);
+  }, [conversation.id, stop]);
 
   async function send(text) {
     if (busy || sending.current || storageError || messages.length >= 80)

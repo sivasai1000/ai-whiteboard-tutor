@@ -113,7 +113,7 @@ The UI follows the current [shadcn AI Elements Chat](https://ui.shadcn.com/docs/
 3. `streamConversation` calls `streamText` through the OpenAI provider. `toUIMessageStream` and `createUIMessageStreamResponse` return SSE events as generation proceeds; there is no artificial typing timer.
 4. Streamdown renders partial Markdown and code. The message scroller follows new output while allowing the user to read earlier messages.
 5. Stop aborts the browser request; the server forwards cancellation to the provider. Switching conversations also stops the old request. Retry/regenerate replaces the last answer without duplicating the question.
-6. Questions are saved before paid generation. Replies and partial responses are stored in IndexedDB, with a final flush when leaving the conversation.
+6. Questions are saved before paid generation. Replies are checkpointed in IndexedDB every 500 ms while streaming, then saved again on completion or when switching screens. Refreshing restores the last saved partial answer; it does not restart a paid request automatically. Use Regenerate to request a complete answer after an interrupted stream.
 
 Up to **40 conversations** with **80 messages each** are saved on the current device. Only the latest 24 text messages, bounded to 48,000 characters, are sent as context. Each user message is limited to 4,000 characters; responses have a 1,800-token output budget. Old context can fall outside this window. Clearing browser data removes the chats. There is no server-side conversation sync, file upload, web browsing or tool execution in this module.
 

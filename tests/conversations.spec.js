@@ -11,6 +11,7 @@ const test = base.extend({
       failNext: false,
       hold: true,
       pending: [],
+      drip: false,
     };
     const server = createServer(async (request, response) => {
       response.setHeader("Access-Control-Allow-Origin", "*");
@@ -55,7 +56,20 @@ const test = base.extend({
         delta:
           "## A clearer answer\n\nHere is the **first part** of the explanation.",
       });
+      const ticker = api.drip
+        ? setInterval(() => {
+            if (!response.destroyed && !response.writableEnded) {
+              write({
+                type: "text-delta",
+                id: `text-${index}`,
+                delta: " more",
+              });
+            }
+          }, 75)
+        : null;
+      response.once("close", () => clearInterval(ticker));
       const finish = () => {
+        clearInterval(ticker);
         if (response.destroyed || response.writableEnded) return;
         write({
           type: "text-delta",
@@ -228,6 +242,60 @@ test("mobile chat stays within the viewport and switching chats stops old output
   await expect(
     page.getByRole("link", { name: /Explain how neural networks/ }),
   ).toBeVisible();
+});
+
+test("saves a continuously streaming partial reply and restores it after a refresh", async ({
+  page,
+  streamApi,
+}) => {
+  streamApi.drip = true;
+  await page.goto("/ai");
+  await page.getByLabel("Message Luma").fill("Explain this step by step");
+  await page.getByLabel("Message Luma").press("Enter");
+  await expect(page.getByTestId("ai-message-assistant")).toContainText(
+    "more more more more more",
+  );
+  await expect
+    .poll(
+      () =>
+        page.evaluate(async () => {
+          const database = await new Promise((resolve, reject) => {
+            const request = indexedDB.open("luma-conversations", 1);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+          const records = await new Promise((resolve, reject) => {
+            const request = database
+              .transaction("conversations")
+              .objectStore("conversations")
+              .getAll();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+          database.close();
+          return (
+            records[0]?.messages
+              .find((m) => m.role === "assistant")
+              ?.parts.filter((p) => p.type === "text")
+              .map((p) => p.text)
+              .join("") || ""
+          );
+        }),
+      { timeout: 3000 },
+    )
+    .toContain("more more more more more");
+  await page.reload();
+  await expect(page.getByTestId("ai-message-assistant")).toContainText(
+    "more more more more more",
+  );
+  await expect.poll(() => streamApi.aborted).toContain(1);
+  expect(streamApi.requests).toHaveLength(1);
+  streamApi.release();
+  await page.getByRole("button", { name: "Regenerate response" }).click();
+  await expect(page.getByTestId("ai-message-assistant")).toContainText(
+    "final detail",
+  );
+  await expect(page.getByTestId("ai-message-user")).toHaveCount(1);
 });
 
 test("the actual endpoint rejects invalid and cross-origin input before provider access", async ({

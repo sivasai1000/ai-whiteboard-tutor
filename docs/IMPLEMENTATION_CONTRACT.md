@@ -18,17 +18,19 @@ POST /api/chat { lesson: { title, summary, scenes: [{title,narration}] }, messag
 GET /api/health -> { aiConfigured: boolean, textModel, speechModel } (no secrets).
 Errors { error: { code, message } }, meaningful HTTP status. Browser's apiRequest helper returns parsed JSON or throws Error(message). AbortSignal supported.
 
-## Provider (root agent owns)
+## Browser lesson provider
 
 src/features/library/LessonProvider.jsx exports LessonProvider and useLessons(). Context: { lessons, ready, storageError, saveLesson(lesson) => Promise, updateLesson(id,patch)=>Promise, deleteLesson(id)=>Promise, getLesson(id), getAudio(lessonId,sceneId)=>Promise<{blob,duration}|undefined>, saveAudio(lessonId,sceneId,audio)=>Promise, clearLibrary()=>Promise }. saveLesson upserts + updates context. New lessons start saved:false. Maximum 30 lessons, manual deletion only once limit reached.
 src/lib/api.js exports apiRequest(url,body,{signal}={}).
 src/lib/sample-lesson.js exports createSampleLesson() (new id per invocation), sampleTopic='Why do we have seasons?'. Sample has ~2min real locally generated static narration audio in public/sample/scene-N.wav; scene.sampleAudioUrl fields point to these files. Explicitly sample, not claimed AI.
 
-## Ownership
+## AI conversations
 
-Root: package/configs/globals.css/components/ui, lib except schema, LessonProvider, sample, all features/lesson, tests timeline + browser.
-Backend agent: src/server/**, src/app/api/**, src/lib/lesson-schema.js, tests/server*.test.js, .env.example. Use model IDs from current official docs. Implement gpt-6-luna structured responses, gpt-realtime-2.1-mini via outbound Node websocket collected to WAV. Signed narration tokens, request limits, safe errors, validation, abort/timeouts, no logged secrets.
-Frontend agent: src/app pages and layout (except globals.css/api), components/layout + shared, features/welcome, tutor, library except provider. Welcome on /; Explore /explore; library /history and /saved; active /lesson/[id]. Pages can server compose client feature. Wrap with LessonProvider then AppShell in layout. Lesson route imports LessonWorkspace from '@/features/lesson/LessonWorkspace'. TutorChat signature { lesson, onPause }, persists messages via provider. Welcome generation saves /api/lessons lesson then router.push. Preview sample saves createSampleLesson() then router.push. Main title style 'Make room for\nyour next big idea.' Voice disclosure via UI. Settings diagnostics modal optional, no dead controls. AppSidebar recent topics real history, no fake seeded counts.
+The `/ai` workspace is separate from lesson-specific follow-up chat. It uses Vercel AI SDK UI messages: `{ id, role: 'user' | 'assistant', parts: [{ type: 'text', text }] }`.
+
+POST `/api/conversations` accepts `{ messages }` and returns the AI SDK UI message SSE protocol (`text/event-stream`). The server validates up to 24 text messages and 48,000 characters. The browser persists up to 40 conversations with 80 messages each in a separate IndexedDB database, checkpointing active replies every 500 ms. Stop and navigation cancel the current response. Refresh restores saved content without automatically spending credits on another request.
+
+`ConversationProvider` owns local persistence. `useConversationChat` owns SDK and send/retry/stop behavior. `useConversationPersistence` checkpoints output. Chat UI composes shadcn AI Elements primitives and Streamdown; feature styles live in `features/ai/style.js`.
 
 ## APIs and UI primitives
 
