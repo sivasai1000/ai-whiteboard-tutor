@@ -1,0 +1,20 @@
+{
+  "duration": 20.057583333333334,
+  "cues": [
+    {
+      "text": "Now choose the lower middle of those four candidates. This time, the middle value is thirty-one.",
+      "start": 0,
+      "end": 6.450541666666667
+    },
+    {
+      "text": "Forty-two is greater than thirty-one, so twenty-four and thirty-one can both be discarded as well.",
+      "start": 6.450541666666667,
+      "end": 12.893333333333334
+    },
+    {
+      "text": "Only forty-two and fifty-six remain. Notice how the search area keeps shrinking after each comparison.",
+      "start": 12.893333333333334,
+      "end": 20.057583333333334
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import { ArrowUp, Square, Sparkles, Loader2 } from "lucide-react";
+import { ArrowUp, Square, Loader2 } from "lucide-react";
+import { ModelControls } from "@/features/model-settings/ModelControls";
 import {
   InputGroup,
   InputGroupAddon,
@@ -19,6 +20,9 @@ export function ChatComposer({
   busy,
   preparing,
   disabled,
+  model,
+  effort,
+  onEffortChange,
 }) {
   const composing = useRef(false);
   return (
@@ -31,7 +35,7 @@ export function ChatComposer({
     >
       <InputGroup className={s.composer}>
         <label htmlFor="ai-chat-input" className="sr-only">
-          Message Luma
+          Message Braynix
         </label>
         <InputGroupTextarea
           id="ai-chat-input"
@@ -62,10 +66,13 @@ export function ChatComposer({
           }}
         />
         <InputGroupAddon align="block-end" className={s.composerFooter}>
-          <span className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Sparkles className="size-3.5 text-primary" /> Luma AI
-          </span>
-          <div className="flex items-center gap-3">
+          <ModelControls
+            model={model}
+            effort={effort}
+            onEffortChange={onEffortChange}
+            disabled={busy || disabled}
+          />
+          <div className="ml-auto flex items-center gap-3">
             <span className={s.composerHint}>
               {value.length > 3500
                 ? `${value.length} / ${MAX_CHAT_INPUT}`
@@ -75,7 +82,7 @@ export function ChatComposer({
               type={busy ? "button" : "submit"}
               variant="default"
               size="icon-sm"
-              className="size-10 rounded-xl"
+              className="size-11 rounded-xl"
               disabled={preparing || (!busy && (disabled || !value.trim()))}
               onClick={busy ? onStop : undefined}
               aria-label={

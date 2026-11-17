@@ -6,8 +6,8 @@ import { ConversationProvider } from "@/features/ai/ConversationProvider";
 
 export const metadata = {
   title: {
-    default: "Luma — A little clarity, on any topic",
-    template: "%s · Luma",
+    default: "Braynix — A little clarity, on any topic",
+    template: "%s · Braynix",
   },
   description:
     "Your ideas, brought to life. Learn any topic through short AI lessons, a visual whiteboard and synchronized narration.",
@@ -16,7 +16,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body>
         <TooltipProvider>
           <LessonProvider>

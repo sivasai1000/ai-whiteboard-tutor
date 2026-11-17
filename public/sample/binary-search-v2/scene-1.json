@@ -1,0 +1,20 @@
+{
+  "duration": 17.610958333333333,
+  "cues": [
+    {
+      "text": "Imagine finding forty-two in this sorted row of eight numbers, from smallest to largest.",
+      "start": 0,
+      "end": 6.033708333333333
+    },
+    {
+      "text": "You could check every number from left to right, but there is a smarter approach.",
+      "start": 6.033708333333333,
+      "end": 10.936708333333332
+    },
+    {
+      "text": "Binary search uses the order to eliminate whole groups, rather than checking each item separately.",
+      "start": 10.936708333333332,
+      "end": 17.610958333333333
+    }
+  ]
+}

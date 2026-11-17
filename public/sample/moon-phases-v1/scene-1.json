@@ -1,0 +1,311 @@
+{
+  "duration": 16.409208333333332,
+  "cues": [
+    {
+      "text": "Look at the Sun on the left. Its light travels toward Earth and the Moon.",
+      "start": 0,
+      "end": 4.727166666666666,
+      "words": [
+        {
+          "text": "Look",
+          "start": 0,
+          "end": 0.30000001192092896,
+          "source": "aligned"
+        },
+        {
+          "text": "at",
+          "start": 0.30000001192092896,
+          "end": 0.5199999809265137,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 0.5199999809265137,
+          "end": 0.8999999761581421,
+          "source": "aligned"
+        },
+        {
+          "text": "Sun",
+          "start": 0.8999999761581421,
+          "end": 0.9399999976158142,
+          "source": "aligned"
+        },
+        {
+          "text": "on",
+          "start": 0.9399999976158142,
+          "end": 1.1200000047683716,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 1.1200000047683716,
+          "end": 1.2999999523162842,
+          "source": "aligned"
+        },
+        {
+          "text": "left.",
+          "start": 1.2999999523162842,
+          "end": 1.559999942779541,
+          "source": "aligned"
+        },
+        {
+          "text": "Its",
+          "start": 2.1600000858306885,
+          "end": 2.240000009536743,
+          "source": "aligned"
+        },
+        {
+          "text": "light",
+          "start": 2.240000009536743,
+          "end": 2.5,
+          "source": "aligned"
+        },
+        {
+          "text": "travels",
+          "start": 2.5,
+          "end": 2.880000114440918,
+          "source": "aligned"
+        },
+        {
+          "text": "toward",
+          "start": 2.880000114440918,
+          "end": 3.2200000286102295,
+          "source": "aligned"
+        },
+        {
+          "text": "Earth",
+          "start": 3.2200000286102295,
+          "end": 3.5399999618530273,
+          "source": "aligned"
+        },
+        {
+          "text": "and",
+          "start": 3.5399999618530273,
+          "end": 4.039999961853027,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 4.039999961853027,
+          "end": 4.480000019073486,
+          "source": "aligned"
+        },
+        {
+          "text": "Moon.",
+          "start": 4.480000019073486,
+          "end": 4.480000019073486,
+          "source": "aligned"
+        }
+      ]
+    },
+    {
+      "text": "The Moon reflects sunlight. Away from eclipses, one half of its surface is always lit.",
+      "start": 4.727166666666666,
+      "end": 10.34675,
+      "words": [
+        {
+          "text": "The",
+          "start": 4.840000152587891,
+          "end": 4.920000076293945,
+          "source": "aligned"
+        },
+        {
+          "text": "Moon",
+          "start": 4.920000076293945,
+          "end": 5.139999866485596,
+          "source": "aligned"
+        },
+        {
+          "text": "reflects",
+          "start": 5.139999866485596,
+          "end": 5.659999847412109,
+          "source": "aligned"
+        },
+        {
+          "text": "sunlight.",
+          "start": 5.659999847412109,
+          "end": 6.139999866485596,
+          "source": "aligned"
+        },
+        {
+          "text": "Away",
+          "start": 6.78000020980835,
+          "end": 6.980000019073486,
+          "source": "aligned"
+        },
+        {
+          "text": "from",
+          "start": 6.980000019073486,
+          "end": 7.199999809265137,
+          "source": "aligned"
+        },
+        {
+          "text": "eclipses,",
+          "start": 7.199999809265137,
+          "end": 7.760000228881836,
+          "source": "aligned"
+        },
+        {
+          "text": "one",
+          "start": 8.180000305175781,
+          "end": 8.479999542236328,
+          "source": "aligned"
+        },
+        {
+          "text": "half",
+          "start": 8.479999542236328,
+          "end": 8.539999961853027,
+          "source": "aligned"
+        },
+        {
+          "text": "of",
+          "start": 8.539999961853027,
+          "end": 8.720000267028809,
+          "source": "aligned"
+        },
+        {
+          "text": "its",
+          "start": 8.720000267028809,
+          "end": 8.84000015258789,
+          "source": "aligned"
+        },
+        {
+          "text": "surface",
+          "start": 8.84000015258789,
+          "end": 9.15999984741211,
+          "source": "aligned"
+        },
+        {
+          "text": "is",
+          "start": 9.15999984741211,
+          "end": 9.479999542236328,
+          "source": "aligned"
+        },
+        {
+          "text": "always",
+          "start": 9.479999542236328,
+          "end": 9.880000114440918,
+          "source": "aligned"
+        },
+        {
+          "text": "lit.",
+          "start": 9.880000114440918,
+          "end": 10.119999885559082,
+          "source": "aligned"
+        }
+      ]
+    },
+    {
+      "text": "Compare the orbit diagram with our view from Earth. We see only part of that illuminated half.",
+      "start": 10.34675,
+      "end": 16.409208333333332,
+      "words": [
+        {
+          "text": "Compare",
+          "start": 10.819999694824219,
+          "end": 10.84000015258789,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 10.84000015258789,
+          "end": 11.199999809265137,
+          "source": "aligned"
+        },
+        {
+          "text": "orbit",
+          "start": 11.199999809265137,
+          "end": 11.5,
+          "source": "aligned"
+        },
+        {
+          "text": "diagram",
+          "start": 11.5,
+          "end": 11.9399995803833,
+          "source": "aligned"
+        },
+        {
+          "text": "with",
+          "start": 11.9399995803833,
+          "end": 12.300000190734863,
+          "source": "aligned"
+        },
+        {
+          "text": "our",
+          "start": 12.300000190734863,
+          "end": 12.520000457763672,
+          "source": "aligned"
+        },
+        {
+          "text": "view",
+          "start": 12.520000457763672,
+          "end": 12.699999809265137,
+          "source": "aligned"
+        },
+        {
+          "text": "from",
+          "start": 12.699999809265137,
+          "end": 12.960000038146973,
+          "source": "aligned"
+        },
+        {
+          "text": "Earth.",
+          "start": 12.960000038146973,
+          "end": 13.239999771118164,
+          "source": "aligned"
+        },
+        {
+          "text": "We",
+          "start": 13.819999694824219,
+          "end": 14,
+          "source": "aligned"
+        },
+        {
+          "text": "see",
+          "start": 14,
+          "end": 14.300000190734863,
+          "source": "aligned"
+        },
+        {
+          "text": "only",
+          "start": 14.300000190734863,
+          "end": 14.579999923706055,
+          "source": "aligned"
+        },
+        {
+          "text": "part",
+          "start": 14.579999923706055,
+          "end": 14.979999542236328,
+          "source": "aligned"
+        },
+        {
+          "text": "of",
+          "start": 14.979999542236328,
+          "end": 15.239999771118164,
+          "source": "aligned"
+        },
+        {
+          "text": "that",
+          "start": 15.239999771118164,
+          "end": 15.380000114440918,
+          "source": "aligned"
+        },
+        {
+          "text": "illuminated",
+          "start": 15.380000114440918,
+          "end": 15.800000190734863,
+          "source": "aligned"
+        },
+        {
+          "text": "half.",
+          "start": 15.800000190734863,
+          "end": 16.280000686645508,
+          "source": "aligned"
+        }
+      ]
+    }
+  ],
+  "voice": "marin",
+  "narration": "AI-generated voice",
+  "wordTimingVersion": 1
+}

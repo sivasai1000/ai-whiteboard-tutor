@@ -1,0 +1,347 @@
+{
+  "duration": 23.125958333333333,
+  "cues": [
+    {
+      "text": "Watch one complete phase cycle: the bright shape grows, then shrinks. In nature, this takes about twenty-nine-and-a-half days.",
+      "start": 0,
+      "end": 8.687166666666666,
+      "words": [
+        {
+          "text": "Watch",
+          "start": 0,
+          "end": 0.3199999928474426,
+          "source": "aligned"
+        },
+        {
+          "text": "one",
+          "start": 0.3199999928474426,
+          "end": 0.8199999928474426,
+          "source": "aligned"
+        },
+        {
+          "text": "complete",
+          "start": 0.8199999928474426,
+          "end": 1.2799999713897705,
+          "source": "aligned"
+        },
+        {
+          "text": "phase",
+          "start": 1.2799999713897705,
+          "end": 1.6200000047683716,
+          "source": "aligned"
+        },
+        {
+          "text": "cycle:",
+          "start": 1.6200000047683716,
+          "end": 1.940000057220459,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 2.5199999809265137,
+          "end": 2.640000104904175,
+          "source": "aligned"
+        },
+        {
+          "text": "bright",
+          "start": 2.640000104904175,
+          "end": 2.859999895095825,
+          "source": "aligned"
+        },
+        {
+          "text": "shape",
+          "start": 2.859999895095825,
+          "end": 3.119999885559082,
+          "source": "aligned"
+        },
+        {
+          "text": "grows,",
+          "start": 3.119999885559082,
+          "end": 3.5199999809265137,
+          "source": "aligned"
+        },
+        {
+          "text": "then",
+          "start": 4,
+          "end": 4.28000020980835,
+          "source": "aligned"
+        },
+        {
+          "text": "shrinks.",
+          "start": 4.28000020980835,
+          "end": 4.599999904632568,
+          "source": "aligned"
+        },
+        {
+          "text": "In",
+          "start": 5.380000114440918,
+          "end": 5.519999980926514,
+          "source": "aligned"
+        },
+        {
+          "text": "nature,",
+          "start": 5.519999980926514,
+          "end": 5.880000114440918,
+          "source": "aligned"
+        },
+        {
+          "text": "this",
+          "start": 5.980000019073486,
+          "end": 6.539999961853027,
+          "source": "aligned"
+        },
+        {
+          "text": "takes",
+          "start": 6.539999961853027,
+          "end": 6.78000020980835,
+          "source": "aligned"
+        },
+        {
+          "text": "about",
+          "start": 6.78000020980835,
+          "end": 7.119999885559082,
+          "source": "aligned"
+        },
+        {
+          "text": "twenty-nine-and-a-half",
+          "start": 7.119999885559082,
+          "end": 8.100000381469727,
+          "source": "aligned"
+        },
+        {
+          "text": "days.",
+          "start": 8.100000381469727,
+          "end": 8.420000076293945,
+          "source": "aligned"
+        }
+      ]
+    },
+    {
+      "text": "Phases are not Earth's shadow. The Moon's tilted orbit usually prevents eclipses; our simplified diagram omits that tilt.",
+      "start": 8.687166666666666,
+      "end": 16.915166666666668,
+      "words": [
+        {
+          "text": "Phases",
+          "start": 8.920000076293945,
+          "end": 8.960000038146973,
+          "source": "aligned"
+        },
+        {
+          "text": "are",
+          "start": 8.960000038146973,
+          "end": 9.359999656677246,
+          "source": "aligned"
+        },
+        {
+          "text": "not",
+          "start": 9.359999656677246,
+          "end": 9.760000228881836,
+          "source": "aligned"
+        },
+        {
+          "text": "Earth's",
+          "start": 9.760000228881836,
+          "end": 10.199999809265137,
+          "source": "aligned"
+        },
+        {
+          "text": "shadow.",
+          "start": 10.199999809265137,
+          "end": 10.420000076293945,
+          "source": "aligned"
+        },
+        {
+          "text": "The",
+          "start": 11.119999885559082,
+          "end": 11.359999656677246,
+          "source": "aligned"
+        },
+        {
+          "text": "Moon's",
+          "start": 11.359999656677246,
+          "end": 11.680000305175781,
+          "source": "aligned"
+        },
+        {
+          "text": "tilted",
+          "start": 11.680000305175781,
+          "end": 11.899999618530273,
+          "source": "aligned"
+        },
+        {
+          "text": "orbit",
+          "start": 11.899999618530273,
+          "end": 12.260000228881836,
+          "source": "aligned"
+        },
+        {
+          "text": "usually",
+          "start": 12.260000228881836,
+          "end": 12.800000190734863,
+          "source": "aligned"
+        },
+        {
+          "text": "prevents",
+          "start": 12.800000190734863,
+          "end": 13.140000343322754,
+          "source": "aligned"
+        },
+        {
+          "text": "eclipses;",
+          "start": 13.140000343322754,
+          "end": 13.760000228881836,
+          "source": "aligned"
+        },
+        {
+          "text": "our",
+          "start": 14.359999656677246,
+          "end": 14.619999885559082,
+          "source": "aligned"
+        },
+        {
+          "text": "simplified",
+          "start": 14.619999885559082,
+          "end": 15.15999984741211,
+          "source": "aligned"
+        },
+        {
+          "text": "diagram",
+          "start": 15.15999984741211,
+          "end": 15.65999984741211,
+          "source": "aligned"
+        },
+        {
+          "text": "omits",
+          "start": 15.65999984741211,
+          "end": 16.059999465942383,
+          "source": "aligned"
+        },
+        {
+          "text": "that",
+          "start": 16.059999465942383,
+          "end": 16.459999084472656,
+          "source": "aligned"
+        },
+        {
+          "text": "tilt.",
+          "start": 16.459999084472656,
+          "end": 16.639999389648438,
+          "source": "aligned"
+        }
+      ]
+    },
+    {
+      "text": "Remember: sunlight illuminates half the Moon, while its position changes how much of that half we see.",
+      "start": 16.915166666666668,
+      "end": 23.125958333333333,
+      "words": [
+        {
+          "text": "Remember:",
+          "start": 17.059999465942383,
+          "end": 17.440000534057617,
+          "source": "aligned"
+        },
+        {
+          "text": "sunlight",
+          "start": 18,
+          "end": 18.31999969482422,
+          "source": "aligned"
+        },
+        {
+          "text": "illuminates",
+          "start": 18.31999969482422,
+          "end": 18.920000076293945,
+          "source": "aligned"
+        },
+        {
+          "text": "half",
+          "start": 18.920000076293945,
+          "end": 19.34000015258789,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 19.34000015258789,
+          "end": 19.799999237060547,
+          "source": "aligned"
+        },
+        {
+          "text": "Moon,",
+          "start": 19.799999237060547,
+          "end": 19.799999237060547,
+          "source": "aligned"
+        },
+        {
+          "text": "while",
+          "start": 20.219999313354492,
+          "end": 20.479999542236328,
+          "source": "aligned"
+        },
+        {
+          "text": "its",
+          "start": 20.479999542236328,
+          "end": 20.68000030517578,
+          "source": "aligned"
+        },
+        {
+          "text": "position",
+          "start": 20.68000030517578,
+          "end": 21.100000381469727,
+          "source": "aligned"
+        },
+        {
+          "text": "changes",
+          "start": 21.100000381469727,
+          "end": 21.579999923706055,
+          "source": "aligned"
+        },
+        {
+          "text": "how",
+          "start": 21.579999923706055,
+          "end": 21.860000610351562,
+          "source": "aligned"
+        },
+        {
+          "text": "much",
+          "start": 21.860000610351562,
+          "end": 22.040000915527344,
+          "source": "aligned"
+        },
+        {
+          "text": "of",
+          "start": 22.040000915527344,
+          "end": 22.200000762939453,
+          "source": "aligned"
+        },
+        {
+          "text": "that",
+          "start": 22.200000762939453,
+          "end": 22.3799991607666,
+          "source": "aligned"
+        },
+        {
+          "text": "half",
+          "start": 22.3799991607666,
+          "end": 22.579999923706055,
+          "source": "aligned"
+        },
+        {
+          "text": "we",
+          "start": 22.579999923706055,
+          "end": 22.860000610351562,
+          "source": "aligned"
+        },
+        {
+          "text": "see.",
+          "start": 22.860000610351562,
+          "end": 23.079999923706055,
+          "source": "aligned"
+        }
+      ]
+    }
+  ],
+  "voice": "marin",
+  "narration": "AI-generated voice",
+  "wordTimingVersion": 1
+}

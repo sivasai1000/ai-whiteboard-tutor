@@ -80,7 +80,7 @@ export function ExploreTopics() {
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
               {topic.description}
             </p>
-            <div className="mt-5 flex items-center gap-3 text-[10px] text-muted-foreground/65">
+            <div className="mt-5 flex items-center gap-3 text-[10px] text-muted-foreground">
               <span>{topic.category}</span>
               <span className="size-0.5 rounded-full bg-current" />
               <span className="flex items-center gap-1">
@@ -96,11 +96,11 @@ export function ExploreTopics() {
           role="status"
           className="py-16 text-center text-sm text-muted-foreground"
         >
-          No suggestions match. You can still ask Luma about any topic from New
-          Lesson.
+          No suggestions match. You can still ask Braynix about any topic from
+          New Lesson.
         </p>
       )}
-      <p className="mt-8 text-xs text-muted-foreground/70">
+      <p className="mt-8 text-xs text-muted-foreground">
         These are topic suggestions. Your lesson is generated when you select
         Start learning.
       </p>

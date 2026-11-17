@@ -27,7 +27,7 @@ export function ChatComposer({ value, onChange, onSubmit, pending }) {
           }}
         />
         <div className="flex items-center justify-between px-3 pb-2.5">
-          <span className="text-[9px] text-muted-foreground/50">
+          <span className="text-[9px] text-muted-foreground">
             Enter to send · Shift + Enter for a new line
           </span>
           <Button
@@ -45,7 +45,7 @@ export function ChatComposer({ value, onChange, onSubmit, pending }) {
           </Button>
         </div>
       </form>
-      <p className="mt-2.5 text-center text-[9px] text-muted-foreground/50">
+      <p className="mt-2.5 text-center text-[9px] text-muted-foreground">
         AI can make mistakes. Stay curious, check the details.
       </p>
     </div>

@@ -119,34 +119,51 @@ export async function readJson(request, maxBytes = 32768) {
 
 function sessionFor(request) {
   const key = process.env.NARRATION_SIGNING_SECRET || getApiKey();
-  const sign = (id) =>
+  const cookieName = "braynix-session";
+  const sign = (id, namespace = "braynix") =>
     createHmac("sha256", key)
-      .update(`luma-session-v1:${id}`)
+      .update(`${namespace}-session-v1:${id}`)
       .digest("base64url");
-  const cookie = request.headers
-    .get("cookie")
-    ?.split(";")
-    .map((part) => part.trim())
-    .find((part) => part.startsWith("luma-session="))
-    ?.slice(13);
-  const [id, mac] = (cookie || "").split(".");
-  if (id && /^[0-9a-f-]{36}$/.test(id) && mac) {
-    const expected = Buffer.from(sign(id));
-    const actual = Buffer.from(mac);
-    if (expected.length === actual.length && timingSafeEqual(expected, actual))
-      return { id };
-  }
-  const nextId = randomUUID();
+  const cookies =
+    request.headers
+      .get("cookie")
+      ?.split(";")
+      .map((part) => part.trim()) || [];
   const secure = new URL(request.url).protocol === "https:" ? "; Secure" : "";
-  return {
-    id: nextId,
-    cookie: `luma-session=${nextId}.${sign(nextId)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=604800${secure}`,
-  };
+  const attributes = `HttpOnly; SameSite=Strict; Path=/${secure}`;
+  const updates = [];
+  let currentId, previousId;
+  for (const cookie of cookies) {
+    const separator = cookie.indexOf("=");
+    const name = cookie.slice(0, separator);
+    if (!/^[a-z][a-z0-9]{0,40}-session$/.test(name)) continue;
+    const [id, mac, extra] = cookie.slice(separator + 1).split(".");
+    if (!id || !/^[0-9a-f-]{36}$/.test(id) || !mac || extra !== undefined)
+      continue;
+    const expected = Buffer.from(sign(id, name.slice(0, -"-session".length)));
+    const actual = Buffer.from(mac);
+    if (expected.length !== actual.length || !timingSafeEqual(expected, actual))
+      continue;
+    if (name === cookieName) currentId = id;
+    else {
+      previousId ??= id;
+      updates.push(`${name}=; ${attributes}; Max-Age=0`);
+    }
+  }
+  const id = currentId || previousId || randomUUID();
+  if (!currentId)
+    updates.push(
+      `${cookieName}=${id}.${sign(id)}; ${attributes}; Max-Age=604800`,
+    );
+  return { id, cookies: updates };
 }
 
 export async function handleApi(request, { schema, kind, maxBytes, handler }) {
   const requestId = randomUUID();
-  const headers = { "Cache-Control": "no-store", "X-Request-Id": requestId };
+  const headers = new Headers({
+    "Cache-Control": "no-store",
+    "X-Request-Id": requestId,
+  });
   try {
     assertSameOrigin(request);
     const parsed = schema.safeParse(await readJson(request, maxBytes));
@@ -158,7 +175,7 @@ export async function handleApi(request, { schema, kind, maxBytes, handler }) {
       );
     getApiKey();
     const session = sessionFor(request);
-    if (session.cookie) headers["Set-Cookie"] = session.cookie;
+    for (const cookie of session.cookies) headers.append("Set-Cookie", cookie);
     await checkRateLimit(request, kind, session.id);
     const result = await handler(parsed.data, {
       signal: AbortSignal.any([request.signal, AbortSignal.timeout(85_000)]),
@@ -166,15 +183,18 @@ export async function handleApi(request, { schema, kind, maxBytes, handler }) {
     // Streaming handlers return their own Response. Preserve its SSE body and
     // content type while applying the same session and request protections.
     if (result instanceof Response) {
-      for (const [key, value] of Object.entries(headers)) {
-        if (!result.headers.has(key)) result.headers.set(key, value);
+      for (const [key, value] of headers) {
+        if (key !== "set-cookie" && !result.headers.has(key))
+          result.headers.set(key, value);
       }
+      for (const cookie of headers.getSetCookie())
+        result.headers.append("Set-Cookie", cookie);
       return result;
     }
     return Response.json(result, { headers });
   } catch (error) {
     const safe = publicError(error);
-    if (safe.retryAfter) headers["Retry-After"] = String(safe.retryAfter);
+    if (safe.retryAfter) headers.set("Retry-After", String(safe.retryAfter));
     if (safe.status >= 500)
       console.error(
         JSON.stringify({

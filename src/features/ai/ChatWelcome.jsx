@@ -1,5 +1,4 @@
 import { BookOpen, Code2, Lightbulb, PenLine } from "lucide-react";
-import { BrandMark } from "@/components/layout/Brand";
 import { aiStyles as s } from "./style";
 
 const suggestions = [
@@ -33,17 +32,14 @@ export function ChatWelcome({ children, onSuggestion, disabled }) {
   return (
     <div className={s.empty}>
       <div className={s.emptyContent}>
-        <BrandMark className="size-12 text-primary" />
-        <p className="mt-5 text-[10px] font-medium uppercase tracking-[0.2em] text-primary/80">
-          A little space to think
-        </p>
+        <p className={s.welcomeEyebrow}>YOUR SPACE TO THINK</p>
         <h1 className={s.heading}>What’s on your mind?</h1>
         <p className={s.subtitle}>
-          Start with a question. Follow an idea.
-          <br className="hidden sm:block" /> Let’s make something clearer,
-          together.
+          A question, a rough idea, a problem to work through.
+          <br className="hidden sm:block" /> Start anywhere. We’ll take it from
+          there.
         </p>
-        <div className="mt-9 w-full text-left">{children}</div>
+        <div className="mt-8 w-full">{children}</div>
         <div className={s.suggestions}>
           {suggestions.map(({ icon: Icon, label, prompt }) => (
             <button
@@ -57,8 +53,8 @@ export function ChatWelcome({ children, onSuggestion, disabled }) {
             </button>
           ))}
         </div>
-        <p className="mt-7 text-[11px] text-muted-foreground/70">
-          Your conversations stay in this browser.
+        <p className={s.welcomeNote}>
+          Conversations stay on this device. Bookmark the ones worth keeping.
         </p>
       </div>
     </div>

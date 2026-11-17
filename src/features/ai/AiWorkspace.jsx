@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { AlertCircle, ArrowUpRight } from "lucide-react";
-import Link from "next/link";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatComposer } from "./ChatComposer";
 import { ChatHeader } from "./ChatHeader";
@@ -12,10 +11,13 @@ import { ChatWelcome } from "./ChatWelcome";
 import { NewChatLink } from "./NewChatLink";
 import { useConversations } from "./ConversationProvider";
 import { useConversationChat } from "./useConversationChat";
+import { ConversationLibrary } from "./ConversationLibrary";
 import { aiStyles as s } from "./style";
 
-function ChatSession({ conversation }) {
-  const chat = useConversationChat(conversation);
+function ChatSession({ conversation, model }) {
+  const chat = useConversationChat(conversation, model);
+  const { setSaved } = useConversations();
+  const [bookmarkPending, setBookmarkPending] = useState(false);
   const hasMessages = chat.messages.length > 0;
   const error = chat.storageError || chat.error?.message;
   const composer = (
@@ -27,6 +29,9 @@ function ChatSession({ conversation }) {
       busy={chat.busy}
       preparing={chat.preparing}
       disabled={Boolean(chat.storageError) || chat.limitReached}
+      model={model}
+      effort={chat.reasoningEffort}
+      onEffortChange={chat.setReasoningEffort}
     />
   );
 
@@ -36,6 +41,18 @@ function ChatSession({ conversation }) {
         title={conversation.title}
         hasMessages={hasMessages}
         onDelete={chat.deleteChat}
+        saved={Boolean(conversation.saved)}
+        bookmarkPending={bookmarkPending}
+        onBookmark={async () => {
+          setBookmarkPending(true);
+          try {
+            await setSaved(conversation.id, !conversation.saved);
+          } catch {
+            /* Provider exposes the storage error beside the composer. */
+          } finally {
+            setBookmarkPending(false);
+          }
+        }}
       />
       {hasMessages ? (
         <>
@@ -101,22 +118,15 @@ function ChatSession({ conversation }) {
           </p>
         </div>
       )}
-      {!hasMessages && (
-        <footer className="flex shrink-0 items-center justify-center border-t border-border/40 px-5 py-4 text-[11px] text-muted-foreground">
-          <Link href="/" className="flex items-center gap-2 hover:text-primary">
-            Prefer to see it explained? Start a whiteboard lesson{" "}
-            <ArrowUpRight className="size-3.5" />
-          </Link>
-        </footer>
-      )}
     </section>
   );
 }
 
-export function AiWorkspace() {
+export function AiWorkspace({ model }) {
   const params = useSearchParams();
   const selected = params.get("chat");
   const newKey = params.get("new");
+  const view = params.get("view");
   const [initialId] = useState(() => crypto.randomUUID());
   const { conversations, ready } = useConversations();
   const draft = useMemo(
@@ -132,6 +142,8 @@ export function AiWorkspace() {
     ? conversations.find((item) => item.id === selected)
     : draft;
 
+  if (view === "history" || view === "saved")
+    return <ConversationLibrary key={view} savedOnly={view === "saved"} />;
   if (!ready)
     return (
       <div className="p-8 text-sm text-muted-foreground" role="status">
@@ -150,5 +162,11 @@ export function AiWorkspace() {
         </Button>
       </div>
     );
-  return <ChatSession key={conversation.id} conversation={conversation} />;
+  return (
+    <ChatSession
+      key={conversation.id}
+      conversation={conversation}
+      model={model}
+    />
+  );
 }

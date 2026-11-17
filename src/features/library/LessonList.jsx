@@ -63,7 +63,7 @@ export function LessonList({ lessons, onBookmark, onDelete, busyId }) {
                   size="icon"
                   variant="ghost"
                   className={cn(
-                    "size-8 text-muted-foreground",
+                    "size-11 text-muted-foreground",
                     lesson.saved && "text-primary",
                   )}
                   disabled={busyId === lesson.id}
@@ -88,7 +88,7 @@ export function LessonList({ lessons, onBookmark, onDelete, busyId }) {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="size-8 text-muted-foreground/60 hover:text-destructive"
+                  className="size-11 text-muted-foreground hover:text-destructive"
                   disabled={busyId === lesson.id}
                   aria-label={`Delete ${lesson.title}`}
                   onClick={() => onDelete(lesson)}

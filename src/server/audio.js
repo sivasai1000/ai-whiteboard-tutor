@@ -43,3 +43,40 @@ export function narrationSimilarity(expected, actual) {
   }
   return (2 * previous[b.length]) / (a.length + b.length);
 }
+
+/** Trim only near-silent edges; keep a small breath around each spoken phrase. */
+export function trimPcm(pcm, sampleRate = 24000) {
+  const count = pcm.length / 2;
+  let first = 0,
+    last = count - 1;
+  while (first < count && Math.abs(pcm.readInt16LE(first * 2)) < 220) first++;
+  while (last > first && Math.abs(pcm.readInt16LE(last * 2)) < 220) last--;
+  if (first === count) throw new Error("Empty narration");
+  const padding = Math.round(sampleRate * 0.06);
+  return pcm.subarray(
+    Math.max(0, first - padding) * 2,
+    Math.min(count, last + padding + 1) * 2,
+  );
+}
+
+export function joinNarrationClips(clips, sampleRate = 24000) {
+  const buffers = [],
+    cues = [];
+  let byteOffset = 0;
+  for (const [index, clip] of clips.entries()) {
+    const pcm = trimPcm(clip.pcm, sampleRate);
+    const gap =
+      index < clips.length - 1
+        ? Buffer.alloc(Math.round(sampleRate * 0.12) * 2)
+        : Buffer.alloc(0);
+    const start = byteOffset / (sampleRate * 2);
+    byteOffset += pcm.length + gap.length;
+    cues.push({ text: clip.text, start, end: byteOffset / (sampleRate * 2) });
+    buffers.push(pcm, gap);
+  }
+  return {
+    pcm: Buffer.concat(buffers),
+    cues,
+    duration: byteOffset / (sampleRate * 2),
+  };
+}

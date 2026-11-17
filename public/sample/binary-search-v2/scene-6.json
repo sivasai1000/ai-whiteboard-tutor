@@ -1,0 +1,20 @@
+{
+  "duration": 22.158416666666668,
+  "cues": [
+    {
+      "text": "For a million items, checking one by one can require a million checks in the worst case.",
+      "start": 0,
+      "end": 5.955166666666667
+    },
+    {
+      "text": "Binary search needs at most twenty comparisons, because each unsuccessful comparison roughly halves the remaining possibilities.",
+      "start": 5.955166666666667,
+      "end": 14.757958333333333
+    },
+    {
+      "text": "Remember the rule: compare the middle, keep the possible half, and repeat. Sorted order is essential.",
+      "start": 14.757958333333333,
+      "end": 22.158416666666668
+    }
+  ]
+}

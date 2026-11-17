@@ -8,32 +8,38 @@ export const lessonRequestSchema = z
       .min(3, "Enter a topic with at least 3 characters.")
       .max(240),
     level: z.enum(["Beginner", "Intermediate"]).default("Beginner"),
+    model: z.string().min(1).max(100).optional(),
+    reasoningEffort: z.enum(["low", "medium", "high"]).default("low"),
   })
   .strict();
 
-// Only data is accepted from the model: never HTML, SVG markup, or executable code.
-export const elementSchema = z
+const nodeId = z.string().regex(/^[a-zA-Z0-9_-]{1,32}$/);
+const nodeList = z.array(nodeId).max(8);
+const visualNodeSchema = z
   .object({
-    id: z.string().regex(/^[a-zA-Z0-9_-]{1,40}$/),
-    type: z.enum(["text", "rect", "circle", "line", "arrow", "equation"]),
-    x: z.number().min(24).max(936),
-    y: z.number().min(24).max(516),
-    width: z.number().min(-900).max(900),
-    height: z.number().min(-480).max(480),
-    text: z.string().max(100),
-    color: z.enum(["violet", "cyan", "amber", "green", "white", "muted"]),
-    appearAt: z.number().min(0).max(0.85),
-    points: z.string().max(0),
-  })
-  .strict();
-
-export const generatedSceneSchema = z
-  .object({
-    id: z.string().regex(/^[a-zA-Z0-9_-]{1,40}$/),
-    title: z.string().min(3).max(70),
-    narration: z.string().min(50).max(800),
-    duration: z.number().min(8).max(40),
-    elements: z.array(elementSchema).min(3).max(12),
+    id: nodeId,
+    label: z.string().min(1).max(28),
+    detail: z.string().max(55),
+    value: z.number().min(0).max(1e12),
+    color: z.enum(["indigo", "teal", "amber", "rose"]),
+    symbol: z.enum([
+      "none",
+      "sun",
+      "water",
+      "cloud",
+      "rain",
+      "leaf",
+      "earth",
+      "atom",
+      "brain",
+      "chip",
+      "battery",
+      "light",
+      "gear",
+      "server",
+      "person",
+      "database",
+    ]),
   })
   .strict();
 
@@ -41,7 +47,68 @@ export const generatedLessonSchema = z
   .object({
     title: z.string().min(3).max(90),
     summary: z.string().min(20).max(400),
-    scenes: z.array(generatedSceneSchema).min(6).max(9),
+    scenes: z
+      .array(
+        z
+          .object({
+            title: z.string().min(3).max(70),
+            visual: z
+              .object({
+                layout: z.enum([
+                  "array",
+                  "flow",
+                  "cycle",
+                  "comparison",
+                  "bars",
+                  "concept",
+                  "equation",
+                  "moon-phases",
+                ]),
+                caption: z.string().min(1).max(45),
+                unit: z.string().max(20),
+                nodes: z.array(visualNodeSchema).min(2).max(8),
+                links: z
+                  .array(
+                    z
+                      .object({
+                        from: nodeId,
+                        to: nodeId,
+                        label: z.string().max(22),
+                      })
+                      .strict(),
+                  )
+                  .max(8),
+              })
+              .strict(),
+            steps: z
+              .array(
+                z
+                  .object({
+                    narration: z.string().min(15).max(180),
+                    note: z.string().max(65),
+                    visible: nodeList.min(1),
+                    focus: nodeList,
+                    dim: nodeList,
+                    updates: z
+                      .array(
+                        z
+                          .object({
+                            id: nodeId,
+                            label: z.string().min(1).max(28),
+                            value: z.number().min(0).max(1e12),
+                          })
+                          .strict(),
+                      )
+                      .max(4),
+                  })
+                  .strict(),
+              )
+              .min(3)
+              .max(5),
+          })
+          .strict(),
+      )
+      .length(6),
   })
   .strict();
 
@@ -49,6 +116,7 @@ export const speechRequestSchema = z
   .object({
     text: z.string().min(10).max(800),
     token: z.string().min(20).max(1000),
+    segments: z.array(z.string().min(15).max(180)).min(3).max(5).optional(),
   })
   .strict();
 
@@ -91,45 +159,4 @@ export const chatRequestSchema = z
 
 export function wordCount(text) {
   return text.trim().split(/\s+/u).filter(Boolean).length;
-}
-
-export function checkLessonGeometry(lesson) {
-  const problems = [];
-  for (const scene of lesson.scenes) {
-    if (
-      !scene.elements.some((item) =>
-        ["rect", "circle", "line", "arrow"].includes(item.type),
-      )
-    ) {
-      problems.push(`${scene.title} needs an explanatory diagram.`);
-    }
-    for (const item of scene.elements) {
-      if (["rect", "circle"].includes(item.type) && item.width <= 0)
-        problems.push("Shapes need positive dimensions.");
-      if (
-        item.type === "rect" &&
-        (item.height <= 0 ||
-          item.x + item.width > 940 ||
-          item.y + item.height > 520)
-      )
-        problems.push("Rectangle outside board.");
-      if (
-        item.type === "circle" &&
-        (item.x - item.width / 2 < 20 ||
-          item.x + item.width / 2 > 940 ||
-          item.y - item.width / 2 < 20 ||
-          item.y + item.width / 2 > 520)
-      )
-        problems.push("Circle outside board.");
-      if (
-        ["line", "arrow"].includes(item.type) &&
-        (item.x + item.width < 20 ||
-          item.x + item.width > 940 ||
-          item.y + item.height < 20 ||
-          item.y + item.height > 520)
-      )
-        problems.push("Line outside board.");
-    }
-  }
-  return problems;
 }

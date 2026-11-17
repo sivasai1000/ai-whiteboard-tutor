@@ -1,4 +1,4 @@
-# Understanding Luma
+# Understanding Braynix
 
 ## The five parts
 
@@ -13,29 +13,35 @@ flowchart TD
   User[Topic input] --> Route[POST /api/lessons]
   Route --> Validate[Validate input and check quotas]
   Validate --> LLM[OpenAI structured lesson]
-  LLM --> Check[Validate lesson and sign narration]
+  LLM --> Structure[Validate diagram structure]
+  Structure --> Review[Bounded narration and diagram consistency review]
+  Review --> Check[Validate reviewed lesson and sign narration]
   Check --> Browser[Lesson workspace]
   Browser --> Speech[POST /api/speech]
   Speech --> Voice[OpenAI Realtime narration]
-  Voice --> WAV[PCM audio converted to WAV]
+  Voice --> Phrases[Record each teaching phrase]
+  Phrases --> WAV[Join PCM clips and measure cue times]
   WAV --> Store[IndexedDB: lesson and audio]
   Store --> Player[HTML audio playback]
   Player --> Clock[Measured chapter timeline]
   Clock --> SVG[React SVG whiteboard]
+  Clock --> Captions[Progressively revealed subtitle words]
   Browser --> Chat[POST /api/chat with lesson context]
 ```
 
 ## Walk through a lesson
 
-The learner types “How do fractions work?” in `TopicInput.jsx`. `WelcomeScreen.jsx` sends that topic and teaching level to `/api/lessons`. The route calls the shared request handler, which checks origin, payload size, schema, configuration and quotas.
+The learner types “How do fractions work?” in `TopicInput.jsx`. The input includes reusable model, effort and teaching-level menus. `WelcomeScreen.jsx` sends the topic, teaching level, configured model and selected effort to `/api/lessons`. The route calls the shared request handler, which checks origin, payload size, schema, configuration and quotas. The service rejects models other than the server's configured model before calling OpenAI; Low effort is the default.
 
-`lesson-service.js` requests a lesson matching `generatedLessonSchema`. The provider must return narration and safe diagram primitives. For example, a fraction can be shown as a row of four rectangles with three highlighted. Shape coordinates and text are data; no model-generated code is executed.
+`lesson-service.js` requests a lesson matching `generatedLessonSchema`. The provider returns semantic diagrams and teaching steps. For example, an algorithm uses ordered array nodes; each spoken comparison highlights a node and each elimination dims the discarded values. The seven general diagram layouts have deterministic coordinates, capacity limits, controlled colors and curated symbols. A specialized `moon-phases` layout uses a checked mathematical model, local imagery and an orbital view paired with the view from Earth. No model-generated code is executed.
 
-The service checks diagram bounds and narration length, assigns IDs, and signs the narration. The browser saves the lesson, then opens `/lesson/[id]`.
+The service checks narration length, unique node IDs, valid connectors, visible/focus/dim references, conflicting states and layout capacity, then calls `lesson-review.js` once. That bounded review can correct factual mistakes in narration when the diagram is already correct, or reject a lesson requiring diagram changes. The revised result must pass validation again before each chapter’s narration is signed. The reviewer uses the same low-cost model and no browsing; it reduces contradictions without guaranteeing factual truth. The browser saves the lesson, then opens `/lesson/[id]`.
 
-`useLessonPlayer.js` checks for cached audio. Missing chapters are sent to `/api/speech`. The server verifies that the narration matches its signed token before requesting voice generation. It collects audio chunks, checks completion and transcript similarity, and returns a WAV. The browser reads the actual duration and caches the clip.
+`useLessonPlayer.js` checks for cached audio. Missing chapters are sent to `/api/speech`. The server verifies that the narration matches its signed token before requesting voice generation. The supplied phrases must concatenate to the exact signed text. One Realtime session records those phrases sequentially. Each response is checked for completion and transcript similarity. Near-silent edges are trimmed, a short pause is inserted, and the clips are joined into a WAV with cue boundaries measured from PCM sample counts. The word-alignment adapter transcribes the joined recording once with word timestamps, validates them, and matches them to the original narration using an ordered token alignment constrained by phrase boundaries. It preserves authored wording. The browser checks phrase continuity and word bounds, reads the media duration and caches the recording with both timing levels. A timeout or poor alignment falls back to estimated word positions while retaining the generated voice; cancelled requests remain cancelled.
 
-Once all clips are ready, the learner presses Play. One HTML audio element plays the chapters in sequence. `timeline.js` maps the overall playback time to a chapter and a local chapter fraction. `Whiteboard.jsx` renders elements whose `appearAt` has been reached. Seeking backward calculates this state again, so later elements disappear correctly.
+Once all clips are ready, the learner presses Play. One HTML audio element plays the chapters in sequence. `timeline.js` maps the overall playback time to a chapter and its measured phrase cue. `resolveVisualStep` reconstructs visible, highlighted and dimmed nodes, applying updates through the active step. `VisualDiagram.jsx` renders that state with responsive positions from `visual-layout.js`. Seeking backward reconstructs earlier values and removes later changes, rather than attempting to reverse animation side effects.
+
+`MoonPhaseScene.jsx` receives `cueProgress` from that same timeline. `resolveMoonPhase` rebuilds the starting value from earlier steps, then interpolates toward the current step's end value. Holding steps keep the phase fixed. `moonGeometry` and `moonLitPath` calculate both views from that single phase; seeking therefore cannot leave one view behind. `MOON_SCENE_CONTRACT` is shared by generation and accuracy review, and `checkMoonScene` rejects unknown objects, invalid phase ranges and backward/oversized transitions. See [astronomy.md](astronomy.md) for model limitations and source provenance.
 
 ## Why there is one clock
 
@@ -43,11 +49,15 @@ An independent animation timer would drift when the audio pauses, buffers or see
 
 Chapter durations initially use a narration estimate for loading UI. Playback uses measured audio durations. At an exact chapter boundary, the next chapter is selected; at the lesson's end, the final chapter remains visible.
 
+`LessonSubtitles.jsx` uses the same active phrase as the diagram, then reveals the cumulative prefix of words whose start times the audio has reached. It uses no animation timers and performs no text highlighting. A new phrase resets the prefix. The phrase is also measured invisibly, outside the accessibility tree, to keep the player from moving as visible text grows. Whiteboard updates remain tied to phrase boundaries. Older saved lessons still use their original `appearAt` percentages and `subtitles.js` estimates; their data is preserved without pretending that measured cues exist. Captions and the player are composed inside `Whiteboard.jsx`, so they remain together when `useLessonFullscreen.js` expands the mounted lesson. Native fullscreen is preferred; the fallback covers the browser viewport, keeps focus inside the lesson and restores focus when Escape is pressed.
+
+Cached Moon previews from the previous release can be upgraded without replacing audio. `sampleWordTimingVersion` records a successful metadata fetch; `wordTimingVersion` records validated/fallback words in IndexedDB. A failed offline metadata request does not mark the sample upgrade complete, so a subsequent online visit can recover. Older cached AI audio uses estimates without an automatic paid backfill.
+
 ## State and storage
 
 - Component state holds input drafts and panel visibility.
 - `LessonProvider` serializes bookmark and message changes to avoid overwriting simultaneous updates.
-- IndexedDB stores structured lessons and audio Blobs. Audio is keyed by lesson and chapter IDs.
+- IndexedDB stores structured lessons, audio Blobs, measured durations and phrase cue tables. Audio is keyed by lesson and chapter IDs.
 - Deleting a lesson removes its clips in the same transaction. Audio finishing after deletion is not saved as an orphan.
 - Navigating away cancels generation/playback work and revokes temporary object URLs.
 
@@ -59,15 +69,16 @@ The server signs narration because a public unrestricted text-to-speech endpoint
 
 ## Honest verification
 
-Vitest checks the data and service rules. Playwright checks the user journey with a real browser and real bundled audio. Mocked AI responses exercise success/failure behavior without spending credits. A separate live smoke test must confirm the selected account's models, audio generation and follow-up answers before deployment is described as fully verified.
+Run `npm run build` to verify compilation, then follow the manual verification steps in the README. The bundled sample checks playback without API credits. Live lesson generation, narration and chat must be checked with a configured provider account before deployment is described as fully verified.
 
 ## Useful interview discussion points
 
 - Why a deterministic board state makes seeking reliable.
 - Why voice generation is separated from the lesson model.
 - Why actual audio duration replaces estimated duration.
-- Why React renders an allowlist of diagram primitives.
+- Why React renders controlled semantic layouts instead of accepting model-generated coordinates or markup.
 - Why data validation cannot guarantee teaching accuracy.
-- The tradeoff between chapter-relative timing and word-level forced alignment.
+- Why the second consistency check adds cost and latency, and why it still cannot guarantee factual accuracy.
+- The timing tradeoff: separately recorded phrases give stable board boundaries; one additional transcription call provides word starts for progressively revealed captions. Timestamp estimates and small unmatched spans are not phoneme-accurate guarantees. The provider adapter has a documented retirement deadline in the README.
 - Why browser-local history is sufficient for this MVP, and what account sync would require.
 - Why process-local rate limits are insufficient across multiple serverless instances.

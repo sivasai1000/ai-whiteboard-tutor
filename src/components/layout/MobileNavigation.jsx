@@ -33,7 +33,8 @@ export function MobileNavigation() {
         <SheetContent side="left" className={s.drawer}>
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <SheetDescription className="sr-only">
-            Browse topics and reopen your lessons.
+            Switch between AI chat and whiteboard lessons, history and saved
+            items.
           </SheetDescription>
           <AppSidebar onNavigate={() => setOpen(false)} />
         </SheetContent>
@@ -43,7 +44,7 @@ export function MobileNavigation() {
         className="flex items-center gap-2 text-xl font-semibold tracking-tight"
       >
         <BrandMark className="size-6" />
-        luma
+        Braynix
       </Link>
       <Button asChild size="icon" variant="ghost">
         <NewLink aria-label={isChat ? "New chat" : "New lesson"}>

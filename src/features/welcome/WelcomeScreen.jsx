@@ -1,33 +1,40 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowUpRight, Clock3, Headphones, Play, Sparkles } from "lucide-react";
+import { Clock3, Sparkles } from "lucide-react";
 import { useLessons } from "@/features/library/LessonProvider";
 import { apiRequest } from "@/lib/api";
 import { createSampleLesson } from "@/lib/sample-lesson";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { TopicInput } from "./TopicInput";
 import { SuggestedTopics } from "./SuggestedTopics";
-import { CuriosityMark, SampleIllustration } from "./CuriosityMark";
+import { SamplePreview } from "./SamplePreview";
 import { welcomeStyles as s } from "./style";
 
-export function WelcomeScreen({ initialTopic = "" }) {
+export function WelcomeScreen({ initialTopic = "", model }) {
   const router = useRouter();
   const { saveLesson, ready, storageError, lessons } = useLessons();
   const [topic, setTopic] = useState(initialTopic);
   const [level, setLevel] = useState("Beginner");
+  const [reasoningEffort, setReasoningEffort] = useState("low");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const controller = useRef(null);
+  const previewId = useRef(null);
+  const previewOpening = useRef(false);
+  const [openingSample, setOpeningSample] = useState(false);
+  const [navigating, startNavigation] = useTransition();
+  const previewBusy = openingSample || navigating;
   const libraryFull = lessons.length >= 30;
   const unavailable = !ready || Boolean(storageError) || libraryFull;
   useEffect(() => () => controller.current?.abort(), []);
 
   async function generateLesson(event) {
     event.preventDefault();
-    if (pending || unavailable || topic.trim().length < 3) return;
+    if (pending || previewBusy || unavailable || topic.trim().length < 3)
+      return;
     const requestController = new AbortController();
     controller.current = requestController;
     setPending(true);
@@ -35,7 +42,7 @@ export function WelcomeScreen({ initialTopic = "" }) {
     try {
       const { lesson } = await apiRequest(
         "/api/lessons",
-        { topic: topic.trim(), level },
+        { topic: topic.trim(), level, model, reasoningEffort },
         { signal: requestController.signal },
       );
       if (requestController.signal.aborted) return;
@@ -51,46 +58,61 @@ export function WelcomeScreen({ initialTopic = "" }) {
     }
   }
 
-  async function openSample() {
+  function prepareSample() {
     if (unavailable || pending) return;
+    previewId.current ??= crypto.randomUUID();
+    router.prefetch(`/lesson/${previewId.current}`);
+  }
+
+  async function openSample() {
+    if (unavailable || pending || previewOpening.current || navigating) return;
+    previewOpening.current = true;
+    setOpeningSample(true);
     setError("");
     try {
       const lesson = createSampleLesson();
+      lesson.id = previewId.current || lesson.id;
       await saveLesson(lesson);
-      router.push(`/lesson/${lesson.id}`);
+      startNavigation(() => router.push(`/lesson/${lesson.id}`));
     } catch (cause) {
       setError(cause.message || "The preview couldn’t be opened.");
+    } finally {
+      previewOpening.current = false;
+      setOpeningSample(false);
     }
   }
 
   return (
     <div className={s.screen}>
       <div className={s.topbar}>
-        <p className="text-xs text-muted-foreground">Your learning space</p>
-        <span className="flex items-center gap-2 text-[10px] text-muted-foreground/75">
-          <Clock3 className="size-3.5" />A few minutes. A fresh perspective.
+        <p className="text-sm font-medium">Whiteboard</p>
+        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Clock3 className="size-3.5" />
+          About 2 minutes
         </span>
       </div>
       <section className={s.content} aria-labelledby="welcome-heading">
-        <CuriosityMark />
-        <p className={s.eyebrow}>For the wonderfully curious</p>
+        <p className={s.eyebrow}>LEARN SOMETHING NEW</p>
         <h1 id="welcome-heading" className={s.heading}>
-          Make room for
+          See the idea.
           <br />
-          your next <span className="text-primary">big idea.</span>
+          <span className="text-primary">Understand the why.</span>
         </h1>
         <p className={s.intro}>
-          Pick a topic. Watch it come to life.
+          Turn any topic into a short visual lesson.
           <br />
-          Your personal tutor, a whiteboard, and a little clarity.
+          Drawings and voice, teaching together at your pace.
         </p>
         <TopicInput
           topic={topic}
           onTopicChange={setTopic}
           level={level}
           onLevelChange={setLevel}
+          model={model}
+          effort={reasoningEffort}
+          onEffortChange={setReasoningEffort}
           pending={pending}
-          disabled={unavailable}
+          disabled={unavailable || previewBusy}
           onSubmit={generateLesson}
           onCancel={() => {
             controller.current?.abort();
@@ -125,45 +147,19 @@ export function WelcomeScreen({ initialTopic = "" }) {
           </div>
         )}
         <SuggestedTopics
-          disabled={pending}
+          disabled={pending || previewBusy}
           onSelect={(value) => {
             setTopic(value);
             document.getElementById("lesson-topic")?.focus();
           }}
         />
-        <button
-          type="button"
-          onClick={openSample}
-          disabled={unavailable || pending}
-          className={s.sample}
-        >
-          <SampleIllustration />
-          <div className="min-w-0 flex-1">
-            <p className="mb-1.5 flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-[0.13em] text-primary">
-              <Play className="size-2.5 fill-current" />
-              Prewritten preview
-            </p>
-            <h2 className="text-[13px] font-medium tracking-tight sm:text-sm">
-              Why do we have seasons?
-            </h2>
-            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-              A small tilt. A whole world of change.
-            </p>
-          </div>
-          <ArrowUpRight className="mr-1 size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-        </button>
+        <SamplePreview
+          onOpen={openSample}
+          onPrepare={prepareSample}
+          opening={previewBusy}
+          disabled={unavailable || pending || previewBusy}
+        />
       </section>
-      <footer className={s.footer}>
-        <span className="flex items-center gap-1.5">
-          <Sparkles className="size-3" />
-          Made for understanding
-        </span>
-        <span className="hidden size-0.5 rounded-full bg-muted-foreground/50 sm:block" />
-        <span className="flex items-center gap-1.5">
-          <Headphones className="size-3" />
-          Visual lessons. AI-generated voice.
-        </span>
-      </footer>
     </div>
   );
 }

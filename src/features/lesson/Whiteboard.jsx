@@ -1,11 +1,14 @@
 "use client";
 
-import { useId, useState } from "react";
-import { Minus, PenLine, Plus, Scan } from "lucide-react";
+import { useId, useState, useEffect, useRef } from "react";
+import { Minus, PenLine, Plus, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { boardColors, lessonStyles as s } from "./style";
 import { visibleElements } from "./timeline";
+import { MoonPhaseScene } from "./MoonPhaseScene";
+import { MOON_LAYOUT } from "@/lib/moon-scene";
+import { VisualDiagram } from "./VisualDiagram";
 import { shapeLabelPosition } from "./diagram-layout";
 
 function DiagramElement({ element, elements, progress, markerId }) {
@@ -29,7 +32,6 @@ function DiagramElement({ element, elements, progress, markerId }) {
         fontSize={type === "equation" ? 34 : 21}
         fontWeight={type === "equation" ? 500 : 400}
         fontFamily={type === "equation" ? "Georgia, serif" : "inherit"}
-        opacity={0.5 + reveal * 0.5}
       >
         {lines.map((line, index) => (
           <tspan key={index} x={x} dy={index === 0 ? 0 : 28}>
@@ -96,9 +98,37 @@ function DiagramElement({ element, elements, progress, markerId }) {
   );
 }
 
-export function Whiteboard({ scene, progress }) {
+export function Whiteboard({
+  scene,
+  progress,
+  stepIndex = 0,
+  elapsed = 0,
+  cueProgress = 0,
+  fullscreen,
+  onToggleFullscreen,
+  children,
+}) {
   const uid = useId().replaceAll(":", "");
   const [zoom, setZoom] = useState(1);
+  const viewport = useRef(null);
+  const [compact, setCompact] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) =>
+      setCompact(entry.contentRect.width < 620),
+    );
+    observer.observe(viewport.current);
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const change = () => setReducedMotion(media.matches);
+    change();
+    media.addEventListener("change", change);
+    return () => {
+      observer.disconnect();
+      media.removeEventListener("change", change);
+    };
+  }, []);
+  const Diagram =
+    scene.visual?.layout === MOON_LAYOUT ? MoonPhaseScene : VisualDiagram;
   const zoomClass = {
     1: "w-full",
     1.5: "w-[150%] min-w-[720px]",
@@ -106,44 +136,76 @@ export function Whiteboard({ scene, progress }) {
   }[zoom];
   return (
     <div className={s.boardShell} data-testid="whiteboard">
-      <div
-        className={cn(s.boardNote, "z-10 rounded bg-[#141419]/90 px-1.5 py-1")}
-      >
-        <PenLine className="size-3" /> THE WHITEBOARD
+      <div className={s.boardHeader}>
+        <div className={s.boardNote}>
+          <span className={s.boardMark}>
+            <PenLine className="size-3.5" />
+          </span>
+          <span className="max-[360px]:hidden">Whiteboard</span>
+          {scene.steps && (
+            <span className={s.boardStep}>
+              Step {stepIndex + 1} / {scene.steps.length}
+            </span>
+          )}
+        </div>
+        <div className={s.boardControls}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={s.boardButton}
+            title="Zoom out"
+            aria-label="Zoom out of whiteboard"
+            disabled={zoom === 1}
+            onClick={() => setZoom((value) => value - 0.5)}
+          >
+            <Minus className="size-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={s.fitButton}
+            aria-label="Fit whiteboard to screen"
+            title="Fit drawing to the board"
+            onClick={() => setZoom(1)}
+          >
+            {Math.round(zoom * 100)}%
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={s.boardButton}
+            title="Zoom in"
+            aria-label="Zoom into whiteboard"
+            disabled={zoom === 2}
+            onClick={() => setZoom((value) => value + 0.5)}
+          >
+            <Plus className="size-3.5" />
+          </Button>
+          <span className={s.fullscreenButton}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={s.boardButton}
+              title={fullscreen ? "Exit fullscreen (Esc)" : "Open fullscreen"}
+              aria-label={fullscreen ? "Exit fullscreen" : "Open fullscreen"}
+              aria-pressed={Boolean(fullscreen)}
+              onClick={onToggleFullscreen}
+            >
+              {fullscreen ? (
+                <Minimize className="size-3.5" />
+              ) : (
+                <Maximize className="size-3.5" />
+              )}
+            </Button>
+          </span>
+        </div>
       </div>
-      <div className="absolute right-3 top-3 z-10 flex items-center gap-0.5 rounded-lg border border-border bg-card/95 p-0.5">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-muted-foreground"
-          aria-label="Zoom out of whiteboard"
-          disabled={zoom === 1}
-          onClick={() => setZoom((value) => value - 0.5)}
-        >
-          <Minus className="size-3" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-muted-foreground"
-          aria-label="Fit whiteboard to screen"
-          onClick={() => setZoom(1)}
-        >
-          <Scan className="size-3" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-muted-foreground"
-          aria-label="Zoom into whiteboard"
-          disabled={zoom === 2}
-          onClick={() => setZoom((value) => value + 0.5)}
-        >
-          <Plus className="size-3" />
-        </Button>
-      </div>
       <div
-        className="flex h-full min-h-64 w-full items-center overflow-auto overscroll-contain pt-10 sm:min-h-80"
+        ref={viewport}
+        className={cn(
+          s.boardViewport,
+          scene.visual?.layout === MOON_LAYOUT && s.simulationViewport,
+        )}
         tabIndex={zoom > 1 ? 0 : undefined}
         role={zoom > 1 ? "region" : undefined}
         aria-label={
@@ -152,70 +214,98 @@ export function Whiteboard({ scene, progress }) {
             : undefined
         }
       >
-        <svg
-          viewBox="0 0 960 540"
-          role="img"
-          aria-label={`${scene.title}. ${scene.elements
-            .filter((element) => element.text && element.appearAt <= progress)
-            .map((element) => element.text)
-            .join(". ")}`}
-          className={cn(
-            s.board,
-            zoomClass,
-            zoom > 1 && "h-auto max-h-none shrink-0",
-          )}
-        >
-          <title>{scene.title}</title>
-          <defs>
-            <pattern
-              id={`${uid}-dots`}
-              x={0}
-              y={0}
-              width={28}
-              height={28}
-              patternUnits="userSpaceOnUse"
-            >
-              <circle cx={1} cy={1} r={0.7} fill="#ffffff" opacity={0.07} />
-            </pattern>
-            {Object.entries(boardColors).map(([name, color]) => (
-              <marker
-                key={name}
-                id={`${uid}-${name}`}
-                viewBox="0 0 10 10"
-                refX={8}
-                refY={5}
-                markerWidth={7}
-                markerHeight={7}
-                orient="auto-start-reverse"
-              >
-                <path
-                  d="M 1 1 L 8 5 L 1 9"
-                  fill="none"
-                  stroke={color}
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </marker>
-            ))}
-          </defs>
-          <rect width={960} height={540} fill={`url(#${uid}-dots)`} />
-          {visibleElements(scene, progress).map((element) => (
-            <DiagramElement
-              key={`${scene.id}-${element.id}`}
-              element={element}
-              elements={scene.elements}
-              progress={progress}
-              markerId={uid}
+        {scene.visual ? (
+          <div
+            className={cn(
+              s.diagramFrame,
+              zoomClass,
+              zoom === 1 && s.diagramFrameFit,
+            )}
+          >
+            <Diagram
+              cueProgress={cueProgress}
+              scene={scene}
+              stepIndex={stepIndex}
+              compact={compact && zoom === 1}
+              elapsed={elapsed}
+              reducedMotion={reducedMotion}
+              className={
+                zoom === 1
+                  ? fullscreen
+                    ? s.diagramFullscreen
+                    : s.diagramFit
+                  : undefined
+              }
             />
-          ))}
-        </svg>
+          </div>
+        ) : (
+          <svg
+            viewBox="0 0 960 540"
+            role="img"
+            aria-label={`${scene.title}. ${scene.elements
+              .filter((element) => element.text && element.appearAt <= progress)
+              .map((element) => element.text)
+              .join(". ")}`}
+            className={cn(
+              s.board,
+              zoomClass,
+              zoom > 1 && "h-auto max-h-none shrink-0",
+            )}
+          >
+            <title>{scene.title}</title>
+            <defs>
+              <pattern
+                id={`${uid}-dots`}
+                x={0}
+                y={0}
+                width={28}
+                height={28}
+                patternUnits="userSpaceOnUse"
+              >
+                <circle
+                  cx={1}
+                  cy={1}
+                  r={0.7}
+                  fill={boardColors.muted}
+                  opacity={0.2}
+                />
+              </pattern>
+              {Object.entries(boardColors).map(([name, color]) => (
+                <marker
+                  key={name}
+                  id={`${uid}-${name}`}
+                  viewBox="0 0 10 10"
+                  refX={8}
+                  refY={5}
+                  markerWidth={7}
+                  markerHeight={7}
+                  orient="auto-start-reverse"
+                >
+                  <path
+                    d="M 1 1 L 8 5 L 1 9"
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={1.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </marker>
+              ))}
+            </defs>
+            <rect width={960} height={540} fill={`url(#${uid}-dots)`} />
+            {visibleElements(scene, progress).map((element) => (
+              <DiagramElement
+                key={`${scene.id}-${element.id}`}
+                element={element}
+                elements={scene.elements}
+                progress={progress}
+                markerId={uid}
+              />
+            ))}
+          </svg>
+        )}
       </div>
-      <span className="absolute bottom-3 right-4 pointer-events-none text-[9px] text-muted-foreground/50 sm:hidden">
-        {zoom === 1
-          ? "Zoom in to explore"
-          : `${Math.round(zoom * 100)}% · Scroll to explore`}
-      </span>
+      {children}
     </div>
   );
 }

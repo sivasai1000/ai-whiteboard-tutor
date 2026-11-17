@@ -7,9 +7,9 @@ function secret() {
   return process.env.NARRATION_SIGNING_SECRET || getApiKey();
 }
 
-function signature(payload) {
+function signature(payload, context = "braynix-narration-v1") {
   return createHmac("sha256", secret())
-    .update(`luma-narration-v1.${payload}`)
+    .update(`${context}.${payload}`)
     .digest("base64url");
 }
 
@@ -25,14 +25,23 @@ export function signNarration(text, now = Date.now()) {
 }
 
 export function verifyNarration(text, token, now = Date.now()) {
-  const [payload, supplied, extra] = token.split(".");
-  if (!payload || !supplied || extra)
+  const [payload, supplied, encodedContext, extra] = token.split(".");
+  const context = encodedContext
+    ? Buffer.from(encodedContext, "base64").toString("utf8")
+    : "braynix-narration-v1";
+  if (
+    !payload ||
+    !supplied ||
+    encodedContext === "" ||
+    extra !== undefined ||
+    !/^[a-z][a-z0-9]{0,40}-narration-v1$/.test(context)
+  )
     throw new AppError(
       "INVALID_NARRATION",
       "This narration request is invalid. Please generate the lesson again.",
       403,
     );
-  const expected = signature(payload);
+  const expected = signature(payload, context);
   const left = Buffer.from(supplied);
   const right = Buffer.from(expected);
   if (left.length !== right.length || !timingSafeEqual(left, right))

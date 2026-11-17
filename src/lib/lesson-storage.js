@@ -1,16 +1,13 @@
-import { openDB } from "idb";
+import { openBraynixDatabase } from "./storage-migration";
 
 let database;
 function getDatabase() {
-  database ??= openDB("luma-lessons", 1, {
-    upgrade(db) {
-      db.createObjectStore("lessons", { keyPath: "id" });
-      db.createObjectStore("audio");
+  database ??= openBraynixDatabase("lessons", ["lessons", "audio"]).catch(
+    (error) => {
+      database = undefined;
+      throw error;
     },
-  }).catch((error) => {
-    database = undefined;
-    throw error;
-  });
+  );
   return database;
 }
 

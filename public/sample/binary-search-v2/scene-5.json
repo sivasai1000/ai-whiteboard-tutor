@@ -1,0 +1,20 @@
+{
+  "duration": 20.501125000000002,
+  "cues": [
+    {
+      "text": "With two candidates left, choose the lower middle again. That value is forty-two, our target.",
+      "start": 0,
+      "end": 6.8055
+    },
+    {
+      "text": "The middle value equals the target. We found forty-two, so the search stops right here.",
+      "start": 6.8055,
+      "end": 13.084166666666668
+    },
+    {
+      "text": "We needed only three comparisons in this example: eighteen, then thirty-one, and finally forty-two.",
+      "start": 13.084166666666668,
+      "end": 20.501125000000002
+    }
+  ]
+}

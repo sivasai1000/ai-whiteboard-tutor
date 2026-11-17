@@ -9,8 +9,12 @@ import { useConversationPersistence } from "./useConversationPersistence";
 
 const transport = new DefaultChatTransport({
   api: "/api/conversations",
-  prepareSendMessagesRequest: ({ messages }) => ({
-    body: { messages: prepareConversationMessages(messages) },
+  prepareSendMessagesRequest: ({ messages, body }) => ({
+    body: {
+      messages: prepareConversationMessages(messages),
+      model: body.model,
+      reasoningEffort: body.reasoningEffort,
+    },
   }),
   fetch: async (url, options) => {
     const response = await fetch(url, options);
@@ -24,11 +28,12 @@ const transport = new DefaultChatTransport({
   },
 });
 
-export function useConversationChat(conversation) {
+export function useConversationChat(conversation, model) {
   const { create, update, remove, storageError } = useConversations();
   const [input, setInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [reasoningEffort, setReasoningEffort] = useState("low");
   const sending = useRef(false);
   const mounted = useRef(true);
 
@@ -46,11 +51,12 @@ export function useConversationChat(conversation) {
         );
       else if (finishReason === "length")
         setNotice(
-          "The answer reached its length limit. Ask Luma to continue if you need more detail.",
+          "The answer reached its length limit. Ask Braynix to continue if you need more detail.",
         );
     },
   });
-  const { messages, status, sendMessage, stop, regenerate, clearError } = chat;
+  const { messages, status, error, sendMessage, stop, regenerate, clearError } =
+    chat;
   const busy = saving || status === "submitted" || status === "streaming";
   useConversationPersistence(conversation.id, messages, busy, update);
 
@@ -89,7 +95,7 @@ export function useConversationChat(conversation) {
       // navigation that a fast stream could delay until after a page refresh.
       window.history.replaceState(null, "", `/ai?chat=${conversation.id}`);
       setInput("");
-      void sendMessage(message);
+      void sendMessage(message, { body: { model, reasoningEffort } });
     } catch {
       // The provider exposes storage errors beside the composer.
     } finally {
@@ -102,7 +108,7 @@ export function useConversationChat(conversation) {
     if (busy || storageError) return;
     setNotice("");
     clearError();
-    void regenerate();
+    void regenerate({ body: { model, reasoningEffort } });
   }
 
   async function deleteChat() {
@@ -116,11 +122,16 @@ export function useConversationChat(conversation) {
   }
 
   return {
-    ...chat,
+    messages,
+    status,
+    error,
+    stop,
     busy,
     preparing: saving,
     input,
     setInput,
+    reasoningEffort,
+    setReasoningEffort,
     send,
     retry,
     deleteChat,

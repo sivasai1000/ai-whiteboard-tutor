@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { AiWorkspace } from "@/features/ai/AiWorkspace";
+import { getModels } from "@/server/config";
 
 export const metadata = { title: "AI chat" };
 
@@ -12,7 +13,7 @@ export default function AiPage() {
         </div>
       }
     >
-      <AiWorkspace />
+      <AiWorkspace model={getModels().textModel} />
     </Suspense>
   );
 }

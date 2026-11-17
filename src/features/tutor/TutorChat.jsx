@@ -117,7 +117,7 @@ export function TutorChat({ lesson, onPause }) {
         {!messages.length && (
           <>
             <div>
-              <div className="mb-4 inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/70">
+              <div className="mb-4 inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
                 <MessageCircle className="size-3" />
                 Let’s make it click
               </div>
@@ -127,7 +127,7 @@ export function TutorChat({ lesson, onPause }) {
               </p>
             </div>
             <div className="space-y-2">
-              <p className="mb-3 text-[10px] text-muted-foreground/65">
+              <p className="mb-3 text-[10px] text-muted-foreground">
                 A few places to start
               </p>
               {suggestions.map((suggestion) => (

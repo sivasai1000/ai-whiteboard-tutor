@@ -1,0 +1,335 @@
+{
+  "duration": 17.962083333333332,
+  "cues": [
+    {
+      "text": "As the Moon continues around Earth, more of its illuminated side becomes visible, growing toward full Moon.",
+      "start": 0,
+      "end": 6.6695,
+      "words": [
+        {
+          "text": "As",
+          "start": 0,
+          "end": 0.25999999046325684,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 0.25999999046325684,
+          "end": 0.5400000214576721,
+          "source": "aligned"
+        },
+        {
+          "text": "Moon",
+          "start": 0.5400000214576721,
+          "end": 0.5799999833106995,
+          "source": "aligned"
+        },
+        {
+          "text": "continues",
+          "start": 0.5799999833106995,
+          "end": 1.1799999475479126,
+          "source": "aligned"
+        },
+        {
+          "text": "around",
+          "start": 1.1799999475479126,
+          "end": 1.5399999618530273,
+          "source": "aligned"
+        },
+        {
+          "text": "Earth,",
+          "start": 1.5399999618530273,
+          "end": 1.8799999952316284,
+          "source": "aligned"
+        },
+        {
+          "text": "more",
+          "start": 2.4800000190734863,
+          "end": 2.619999885559082,
+          "source": "aligned"
+        },
+        {
+          "text": "of",
+          "start": 2.619999885559082,
+          "end": 2.799999952316284,
+          "source": "aligned"
+        },
+        {
+          "text": "its",
+          "start": 2.799999952316284,
+          "end": 2.940000057220459,
+          "source": "aligned"
+        },
+        {
+          "text": "illuminated",
+          "start": 2.940000057220459,
+          "end": 3.4000000953674316,
+          "source": "aligned"
+        },
+        {
+          "text": "side",
+          "start": 3.4000000953674316,
+          "end": 3.859999895095825,
+          "source": "aligned"
+        },
+        {
+          "text": "becomes",
+          "start": 3.859999895095825,
+          "end": 4.260000228881836,
+          "source": "aligned"
+        },
+        {
+          "text": "visible,",
+          "start": 4.260000228881836,
+          "end": 4.699999809265137,
+          "source": "aligned"
+        },
+        {
+          "text": "growing",
+          "start": 5.5,
+          "end": 5.5,
+          "source": "aligned"
+        },
+        {
+          "text": "toward",
+          "start": 5.5,
+          "end": 5.800000190734863,
+          "source": "aligned"
+        },
+        {
+          "text": "full",
+          "start": 5.800000190734863,
+          "end": 6.179999828338623,
+          "source": "aligned"
+        },
+        {
+          "text": "Moon.",
+          "start": 6.179999828338623,
+          "end": 6.400000095367432,
+          "source": "aligned"
+        }
+      ]
+    },
+    {
+      "text": "Now the Moon is opposite the Sun in our sky. Its visible disk is almost completely illuminated.",
+      "start": 6.6695,
+      "end": 12.485166666666666,
+      "words": [
+        {
+          "text": "Now",
+          "start": 6.800000190734863,
+          "end": 6.940000057220459,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 6.940000057220459,
+          "end": 7.199999809265137,
+          "source": "aligned"
+        },
+        {
+          "text": "Moon",
+          "start": 7.199999809265137,
+          "end": 7.400000095367432,
+          "source": "aligned"
+        },
+        {
+          "text": "is",
+          "start": 7.400000095367432,
+          "end": 7.619999885559082,
+          "source": "aligned"
+        },
+        {
+          "text": "opposite",
+          "start": 7.619999885559082,
+          "end": 8.020000457763672,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 8.020000457763672,
+          "end": 8.34000015258789,
+          "source": "aligned"
+        },
+        {
+          "text": "Sun",
+          "start": 8.34000015258789,
+          "end": 8.520000457763672,
+          "source": "aligned"
+        },
+        {
+          "text": "in",
+          "start": 8.520000457763672,
+          "end": 8.65999984741211,
+          "source": "aligned"
+        },
+        {
+          "text": "our",
+          "start": 8.65999984741211,
+          "end": 8.880000114440918,
+          "source": "aligned"
+        },
+        {
+          "text": "sky.",
+          "start": 8.880000114440918,
+          "end": 9.15999984741211,
+          "source": "aligned"
+        },
+        {
+          "text": "Its",
+          "start": 9.680000305175781,
+          "end": 9.819999694824219,
+          "source": "aligned"
+        },
+        {
+          "text": "visible",
+          "start": 9.819999694824219,
+          "end": 10.180000305175781,
+          "source": "aligned"
+        },
+        {
+          "text": "disk",
+          "start": 10.180000305175781,
+          "end": 10.539999961853027,
+          "source": "aligned"
+        },
+        {
+          "text": "is",
+          "start": 10.539999961853027,
+          "end": 10.800000190734863,
+          "source": "aligned"
+        },
+        {
+          "text": "almost",
+          "start": 10.800000190734863,
+          "end": 11.100000381469727,
+          "source": "aligned"
+        },
+        {
+          "text": "completely",
+          "start": 11.100000381469727,
+          "end": 11.65999984741211,
+          "source": "aligned"
+        },
+        {
+          "text": "illuminated.",
+          "start": 11.65999984741211,
+          "end": 12.15999984741211,
+          "source": "aligned"
+        }
+      ]
+    },
+    {
+      "text": "The Moon has not started glowing by itself. We are looking at the side that reflects sunlight.",
+      "start": 12.485166666666666,
+      "end": 17.962083333333332,
+      "words": [
+        {
+          "text": "The",
+          "start": 12.539999961853027,
+          "end": 12.65999984741211,
+          "source": "aligned"
+        },
+        {
+          "text": "Moon",
+          "start": 12.65999984741211,
+          "end": 12.84000015258789,
+          "source": "aligned"
+        },
+        {
+          "text": "has",
+          "start": 12.84000015258789,
+          "end": 13.100000381469727,
+          "source": "aligned"
+        },
+        {
+          "text": "not",
+          "start": 13.100000381469727,
+          "end": 13.4399995803833,
+          "source": "aligned"
+        },
+        {
+          "text": "started",
+          "start": 13.4399995803833,
+          "end": 13.819999694824219,
+          "source": "aligned"
+        },
+        {
+          "text": "glowing",
+          "start": 13.819999694824219,
+          "end": 14.079999923706055,
+          "source": "aligned"
+        },
+        {
+          "text": "by",
+          "start": 14.079999923706055,
+          "end": 14.479999542236328,
+          "source": "aligned"
+        },
+        {
+          "text": "itself.",
+          "start": 14.479999542236328,
+          "end": 14.819999694824219,
+          "source": "aligned"
+        },
+        {
+          "text": "We",
+          "start": 15.420000076293945,
+          "end": 15.640000343322754,
+          "source": "aligned"
+        },
+        {
+          "text": "are",
+          "start": 15.640000343322754,
+          "end": 15.819999694824219,
+          "source": "aligned"
+        },
+        {
+          "text": "looking",
+          "start": 15.819999694824219,
+          "end": 16.059999465942383,
+          "source": "aligned"
+        },
+        {
+          "text": "at",
+          "start": 16.059999465942383,
+          "end": 16.239999771118164,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 16.239999771118164,
+          "end": 16.420000076293945,
+          "source": "aligned"
+        },
+        {
+          "text": "side",
+          "start": 16.420000076293945,
+          "end": 16.700000762939453,
+          "source": "aligned"
+        },
+        {
+          "text": "that",
+          "start": 16.700000762939453,
+          "end": 16.959999084472656,
+          "source": "aligned"
+        },
+        {
+          "text": "reflects",
+          "start": 16.959999084472656,
+          "end": 17.299999237060547,
+          "source": "aligned"
+        },
+        {
+          "text": "sunlight.",
+          "start": 17.299999237060547,
+          "end": 17.84000015258789,
+          "source": "aligned"
+        }
+      ]
+    }
+  ],
+  "voice": "marin",
+  "narration": "AI-generated voice",
+  "wordTimingVersion": 1
+}

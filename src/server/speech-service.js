@@ -3,10 +3,11 @@ import WebSocket from "ws";
 import { getApiKey, getModels } from "./config.js";
 import { AppError } from "./errors.js";
 import { verifyNarration } from "./speech-tokens.js";
-import { pcmToWav, narrationSimilarity } from "./audio.js";
+import { pcmToWav, narrationSimilarity, joinNarrationClips } from "./audio.js";
+import { addWordTimings } from "./word-alignment.js";
 import { SPEECH_PROMPT } from "./prompts.js";
 
-const cacheKey = Symbol.for("luma.narration-cache");
+const cacheKey = Symbol.for("braynix.narration-cache");
 const cache = (globalThis[cacheKey] ||= new Map());
 const SAMPLE_RATE = 24000;
 const MAX_PCM_BYTES = SAMPLE_RATE * 2 * 48;
@@ -55,7 +56,14 @@ export function speechResponseEvent(text) {
 
 export function generateRealtimeAudio(
   text,
-  { signal, apiKey, model, voice = "marin", socketFactory } = {},
+  {
+    signal,
+    apiKey,
+    model,
+    voice = "marin",
+    socketFactory,
+    segments = [text],
+  } = {},
 ) {
   return new Promise((resolve, reject) => {
     if (signal?.aborted)
@@ -75,6 +83,9 @@ export function generateRealtimeAudio(
       bytes = 0,
       transcript = "";
     const chunks = [];
+    const clips = [];
+    let segmentIndex = 0;
+    const transcripts = [];
     const finish = (error, result) => {
       if (finished) return;
       finished = true;
@@ -148,7 +159,9 @@ export function generateRealtimeAudio(
       }
       if (event.type === "session.updated" && !requested) {
         requested = true;
-        socket.send(JSON.stringify(speechResponseEvent(text)));
+        socket.send(
+          JSON.stringify(speechResponseEvent(segments[segmentIndex])),
+        );
       } else if (event.type === "response.output_audio.delta") {
         const chunk = Buffer.from(event.delta || "", "base64");
         bytes += chunk.length;
@@ -203,7 +216,7 @@ export function generateRealtimeAudio(
               502,
             ),
           );
-        if (narrationSimilarity(text, transcript) < 0.72)
+        if (narrationSimilarity(segments[segmentIndex], transcript) < 0.8)
           return finish(
             new AppError(
               "AUDIO_MISMATCH",
@@ -213,13 +226,26 @@ export function generateRealtimeAudio(
           );
         try {
           const pcm = Buffer.concat(chunks);
-          const duration = pcm.length / (SAMPLE_RATE * 2);
-          if (duration < 1) throw new Error("Empty audio");
+          if (pcm.length < SAMPLE_RATE / 2 || pcm.length % 2)
+            throw new Error("Empty audio");
+          clips.push({ pcm, text: segments[segmentIndex] });
+          transcripts.push(transcript);
+          segmentIndex++;
+          if (segmentIndex < segments.length) {
+            chunks.length = 0;
+            transcript = "";
+            socket.send(
+              JSON.stringify(speechResponseEvent(segments[segmentIndex])),
+            );
+            return;
+          }
+          const joined = joinNarrationClips(clips);
           finish(null, {
-            audio: pcmToWav(pcm).toString("base64"),
+            audio: pcmToWav(joined.pcm).toString("base64"),
             mimeType: "audio/wav",
-            duration,
-            transcript,
+            duration: joined.duration,
+            cues: joined.cues,
+            transcript: transcripts.join(" "),
           });
         } catch {
           finish(
@@ -235,20 +261,32 @@ export function generateRealtimeAudio(
   });
 }
 
-export async function generateSpeech({ text, token }, { signal } = {}) {
+export async function generateSpeech(
+  { text, token, segments },
+  { signal } = {},
+) {
   const apiKey = getApiKey();
   const hash = verifyNarration(text, token);
+  if (segments && segments.join(" ") !== text) {
+    throw new AppError(
+      "NARRATION_SEGMENTS",
+      "The narration steps do not match this lesson.",
+      400,
+    );
+  }
   const model = getModels().speechModel;
   const voice = process.env.OPENAI_VOICE || "marin";
-  const key = `${model}:${voice}:${hash}`;
+  const key = `timed-v3:${model}:${voice}:${hash}:${JSON.stringify(segments || [text])}`;
   const existing = cache.get(key);
   if (existing && existing.expires > Date.now()) return existing.result;
-  const result = await generateRealtimeAudio(text, {
+  const recording = await generateRealtimeAudio(text, {
     apiKey,
     model,
     voice,
     signal,
+    segments,
   });
+  const result = await addWordTimings(recording, { signal });
   for (const [id, entry] of cache)
     if (entry.expires <= Date.now()) cache.delete(id);
   let size = [...cache.values()].reduce(

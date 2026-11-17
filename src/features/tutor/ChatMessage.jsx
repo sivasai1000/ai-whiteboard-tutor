@@ -14,7 +14,7 @@ export function ChatMessage({ message }) {
       <div className="mb-2.5 flex items-center gap-2">
         <BrandMark className="size-3.5" />
         <span className="text-[10px] font-medium text-muted-foreground">
-          Luma
+          Braynix
         </span>
       </div>
       <div className={s.assistant} data-testid="chat-message-assistant">

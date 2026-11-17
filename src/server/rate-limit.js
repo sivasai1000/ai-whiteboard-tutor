@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { AppError } from "./errors.js";
 import { envLimit } from "./config.js";
 
-const stateKey = Symbol.for("luma.rate-limits");
+const stateKey = Symbol.for("braynix.rate-limits");
 const counters = (globalThis[stateKey] ||= new Map());
 const HOUR = 3600;
 const DAY = 86400;
@@ -93,7 +93,7 @@ export async function consumeSharedLimits(rules) {
         "EVAL",
         SHARED_LIMIT_SCRIPT,
         String(rules.length),
-        ...rules.map(([key]) => `luma:{limits}:${key}`),
+        ...rules.map(([key]) => `braynix:{limits}:${key}`),
         ...rules.flatMap(([, limit, window]) => [
           String(limit),
           String(window),

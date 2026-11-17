@@ -8,6 +8,19 @@ export function getModels() {
   };
 }
 
+/** Both lesson and chat requests can use only the server-configured model. */
+export function resolveTextModel(requested) {
+  const configured = getModels().textModel;
+  if (requested && requested !== configured) {
+    throw new AppError(
+      "MODEL_UNAVAILABLE",
+      "That model is not available in this workspace. Refresh and try again.",
+      400,
+    );
+  }
+  return configured;
+}
+
 export function getApiKey() {
   const key = process.env.OPENAI_API_KEY?.trim();
   if (!key || key === "your-openai-api-key") {

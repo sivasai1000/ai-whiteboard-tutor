@@ -1,0 +1,20 @@
+{
+  "duration": 18.666458333333335,
+  "cues": [
+    {
+      "text": "Start at the lower middle position. Here, the middle number is eighteen, highlighted on the board.",
+      "start": 0,
+      "end": 6.6193333333333335
+    },
+    {
+      "text": "Our target, forty-two, is greater than eighteen, so it must be somewhere to the right.",
+      "start": 6.6193333333333335,
+      "end": 12.931333333333335
+    },
+    {
+      "text": "Discard eighteen and everything to its left. All four values are smaller than our target.",
+      "start": 12.931333333333335,
+      "end": 18.666458333333335
+    }
+  ]
+}

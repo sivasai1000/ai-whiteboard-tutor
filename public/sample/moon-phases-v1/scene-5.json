@@ -1,0 +1,329 @@
+{
+  "duration": 18.387125,
+  "cues": [
+    {
+      "text": "Continue around the orbit. The visible illuminated part now gets smaller, a change we call waning.",
+      "start": 0,
+      "end": 7.675916666666667,
+      "words": [
+        {
+          "text": "Continue",
+          "start": 0,
+          "end": 0.6000000238418579,
+          "source": "aligned"
+        },
+        {
+          "text": "around",
+          "start": 0.6000000238418579,
+          "end": 1.0199999809265137,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 1.0199999809265137,
+          "end": 1.559999942779541,
+          "source": "aligned"
+        },
+        {
+          "text": "orbit.",
+          "start": 1.559999942779541,
+          "end": 1.559999942779541,
+          "source": "aligned"
+        },
+        {
+          "text": "The",
+          "start": 2.2200000286102295,
+          "end": 2.359999895095825,
+          "source": "aligned"
+        },
+        {
+          "text": "visible",
+          "start": 2.359999895095825,
+          "end": 2.799999952316284,
+          "source": "aligned"
+        },
+        {
+          "text": "illuminated",
+          "start": 2.799999952316284,
+          "end": 3.319999933242798,
+          "source": "aligned"
+        },
+        {
+          "text": "part",
+          "start": 3.319999933242798,
+          "end": 3.7200000286102295,
+          "source": "aligned"
+        },
+        {
+          "text": "now",
+          "start": 3.7200000286102295,
+          "end": 4.300000190734863,
+          "source": "aligned"
+        },
+        {
+          "text": "gets",
+          "start": 4.300000190734863,
+          "end": 4.559999942779541,
+          "source": "aligned"
+        },
+        {
+          "text": "smaller,",
+          "start": 4.559999942779541,
+          "end": 4.960000038146973,
+          "source": "aligned"
+        },
+        {
+          "text": "a",
+          "start": 5.659999847412109,
+          "end": 5.800000190734863,
+          "source": "aligned"
+        },
+        {
+          "text": "change",
+          "start": 5.800000190734863,
+          "end": 6.21999979019165,
+          "source": "aligned"
+        },
+        {
+          "text": "we",
+          "start": 6.21999979019165,
+          "end": 6.659999847412109,
+          "source": "aligned"
+        },
+        {
+          "text": "call",
+          "start": 6.659999847412109,
+          "end": 7,
+          "source": "aligned"
+        },
+        {
+          "text": "waning.",
+          "start": 7,
+          "end": 7.300000190734863,
+          "source": "aligned"
+        }
+      ]
+    },
+    {
+      "text": "At third quarter, half the visible disk is illuminated again, now on the left in this view.",
+      "start": 7.675916666666667,
+      "end": 12.842333333333332,
+      "words": [
+        {
+          "text": "At",
+          "start": 7.675916666666667,
+          "end": 7.920000076293945,
+          "source": "aligned"
+        },
+        {
+          "text": "third",
+          "start": 7.920000076293945,
+          "end": 8.239999771118164,
+          "source": "aligned"
+        },
+        {
+          "text": "quarter,",
+          "start": 8.239999771118164,
+          "end": 8.520000457763672,
+          "source": "aligned"
+        },
+        {
+          "text": "half",
+          "start": 8.899999618530273,
+          "end": 8.979999542236328,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 8.979999542236328,
+          "end": 9.15999984741211,
+          "source": "aligned"
+        },
+        {
+          "text": "visible",
+          "start": 9.15999984741211,
+          "end": 9.399999618530273,
+          "source": "aligned"
+        },
+        {
+          "text": "disk",
+          "start": 9.399999618530273,
+          "end": 9.720000267028809,
+          "source": "aligned"
+        },
+        {
+          "text": "is",
+          "start": 9.720000267028809,
+          "end": 10,
+          "source": "aligned"
+        },
+        {
+          "text": "illuminated",
+          "start": 10,
+          "end": 10.34000015258789,
+          "source": "aligned"
+        },
+        {
+          "text": "again,",
+          "start": 10.34000015258789,
+          "end": 10.800000190734863,
+          "source": "aligned"
+        },
+        {
+          "text": "now",
+          "start": 11.34000015258789,
+          "end": 11.5,
+          "source": "aligned"
+        },
+        {
+          "text": "on",
+          "start": 11.5,
+          "end": 11.680000305175781,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 11.680000305175781,
+          "end": 11.859999656677246,
+          "source": "aligned"
+        },
+        {
+          "text": "left",
+          "start": 11.859999656677246,
+          "end": 12.079999923706055,
+          "source": "aligned"
+        },
+        {
+          "text": "in",
+          "start": 12.079999923706055,
+          "end": 12.260000228881836,
+          "source": "aligned"
+        },
+        {
+          "text": "this",
+          "start": 12.260000228881836,
+          "end": 12.460000038146973,
+          "source": "aligned"
+        },
+        {
+          "text": "view.",
+          "start": 12.460000038146973,
+          "end": 12.640000343322754,
+          "source": "aligned"
+        }
+      ]
+    },
+    {
+      "text": "The Moon moves through a waning crescent and returns toward new Moon, ready to repeat the cycle.",
+      "start": 12.842333333333332,
+      "end": 18.387125,
+      "words": [
+        {
+          "text": "The",
+          "start": 12.859999656677246,
+          "end": 13.220000267028809,
+          "source": "aligned"
+        },
+        {
+          "text": "Moon",
+          "start": 13.220000267028809,
+          "end": 13.220000267028809,
+          "source": "aligned"
+        },
+        {
+          "text": "moves",
+          "start": 13.220000267028809,
+          "end": 13.619999885559082,
+          "source": "aligned"
+        },
+        {
+          "text": "through",
+          "start": 13.619999885559082,
+          "end": 13.84000015258789,
+          "source": "aligned"
+        },
+        {
+          "text": "a",
+          "start": 13.84000015258789,
+          "end": 14.239999771118164,
+          "source": "aligned"
+        },
+        {
+          "text": "waning",
+          "start": 14.239999771118164,
+          "end": 14.239999771118164,
+          "source": "aligned"
+        },
+        {
+          "text": "crescent",
+          "start": 14.239999771118164,
+          "end": 14.699999809265137,
+          "source": "aligned"
+        },
+        {
+          "text": "and",
+          "start": 14.699999809265137,
+          "end": 15.380000114440918,
+          "source": "aligned"
+        },
+        {
+          "text": "returns",
+          "start": 15.380000114440918,
+          "end": 15.779999732971191,
+          "source": "aligned"
+        },
+        {
+          "text": "toward",
+          "start": 15.779999732971191,
+          "end": 16.139999389648438,
+          "source": "aligned"
+        },
+        {
+          "text": "new",
+          "start": 16.139999389648438,
+          "end": 16.420000076293945,
+          "source": "aligned"
+        },
+        {
+          "text": "Moon,",
+          "start": 16.420000076293945,
+          "end": 16.700000762939453,
+          "source": "aligned"
+        },
+        {
+          "text": "ready",
+          "start": 17.239999771118164,
+          "end": 17.280000686645508,
+          "source": "aligned"
+        },
+        {
+          "text": "to",
+          "start": 17.280000686645508,
+          "end": 17.799999237060547,
+          "source": "aligned"
+        },
+        {
+          "text": "repeat",
+          "start": 17.799999237060547,
+          "end": 17.799999237060547,
+          "source": "aligned"
+        },
+        {
+          "text": "the",
+          "start": 17.799999237060547,
+          "end": 18.280000686645508,
+          "source": "aligned"
+        },
+        {
+          "text": "cycle.",
+          "start": 18.280000686645508,
+          "end": 18.280000686645508,
+          "source": "aligned"
+        }
+      ]
+    }
+  ],
+  "voice": "marin",
+  "narration": "AI-generated voice",
+  "wordTimingVersion": 1
+}

@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Headphones,
-  LoaderCircle,
-  Sparkles,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Headphones, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLessons } from "@/features/library/LessonProvider";
 import { TutorChat } from "@/features/tutor/TutorChat";
@@ -17,11 +11,14 @@ import { LessonToolbar } from "./LessonToolbar";
 import { LessonPlayer } from "./LessonPlayer";
 import { Whiteboard } from "./Whiteboard";
 import { useLessonPlayer } from "./useLessonPlayer";
+import { useLessonFullscreen } from "./useLessonFullscreen";
+import { LessonSubtitles } from "./LessonSubtitles";
 import { lessonStyles as s } from "./style";
 
 function ActiveLesson({ lesson }) {
   const { updateLesson } = useLessons();
   const player = useLessonPlayer(lesson);
+  const fullscreen = useLessonFullscreen();
   const [chatOpen, setChatOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -53,8 +50,19 @@ function ActiveLesson({ lesson }) {
       />
       <div className={s.body}>
         <section
-          className={cn(s.main, chatOpen && "hidden xl:flex")}
+          ref={fullscreen.ref}
+          className={cn(
+            s.main,
+            chatOpen && "hidden xl:flex",
+            fullscreen.active && s.fullscreen,
+            fullscreen.expanded && "fixed inset-0 z-50",
+          )}
           aria-label="Interactive lesson"
+          data-fullscreen={fullscreen.active}
+          data-expanded={fullscreen.expanded}
+          role={fullscreen.expanded ? "dialog" : undefined}
+          aria-modal={fullscreen.expanded ? true : undefined}
+          tabIndex={fullscreen.expanded ? -1 : undefined}
         >
           <div className={s.sceneHeading}>
             <div>
@@ -72,9 +80,19 @@ function ActiveLesson({ lesson }) {
               learning
             </span>
           </div>
+          {fullscreen.expanded && (
+            <p role="status" className="sr-only">
+              Expanded lesson view. Press Escape to close.
+            </p>
+          )}
           {saveError && (
             <p role="alert" className={s.error}>
               {saveError}
+            </p>
+          )}
+          {fullscreen.error && (
+            <p role="status" className={s.error}>
+              {fullscreen.error}
             </p>
           )}
           {player.error && (
@@ -90,8 +108,27 @@ function ActiveLesson({ lesson }) {
               </Button>
             </div>
           )}
-          <div className="relative flex min-h-0 flex-1 flex-col">
-            <Whiteboard scene={state.scene} progress={state.progress} />
+          <div className={s.boardStage}>
+            <Whiteboard
+              scene={state.scene}
+              progress={state.progress}
+              stepIndex={state.stepIndex}
+              cueProgress={state.cueProgress}
+              elapsed={state.localTime - (state.cue?.start || 0)}
+              fullscreen={fullscreen.active}
+              onToggleFullscreen={fullscreen.toggle}
+            >
+              <div className={s.mediaOverlay}>
+                <LessonSubtitles
+                  narration={state.scene.narration}
+                  duration={state.duration}
+                  time={state.localTime}
+                  loading={player.loading}
+                  measuredCue={state.cue}
+                />
+                <LessonPlayer player={player} />
+              </div>
+            </Whiteboard>
             {player.loading && (
               <div className={s.loading} role="status">
                 <div className="flex size-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
@@ -99,7 +136,9 @@ function ActiveLesson({ lesson }) {
                 </div>
                 <div>
                   <p className="text-sm font-medium">
-                    Giving your lesson a voice
+                    {lesson.source === "sample"
+                      ? "Loading sample narration"
+                      : "Giving your lesson a voice"}
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
                     Preparing chapter{" "}
@@ -110,34 +149,6 @@ function ActiveLesson({ lesson }) {
                 <LoaderCircle className="size-4 animate-spin text-primary" />
               </div>
             )}
-          </div>
-          <p className={s.caption}>{state.scene.narration}</p>
-          <LessonPlayer player={player} />
-          <nav className={s.segments} aria-label="Lesson chapters">
-            {player.timeline.map((segment, index) => (
-              <button
-                key={segment.scene.id}
-                className={cn(
-                  s.segment,
-                  index === state.index && s.segmentActive,
-                )}
-                aria-label={`Chapter ${index + 1}: ${segment.scene.title}`}
-                aria-current={index === state.index ? "step" : undefined}
-                disabled={!player.ready}
-                onClick={() => player.seek(segment.start)}
-              >
-                {String(index + 1).padStart(2, "0")}
-              </button>
-            ))}
-          </nav>
-          <div className={s.disclosure}>
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="size-2.5" />
-              {lesson.source === "sample"
-                ? "Prewritten preview · synthetic narration"
-                : "AI-generated lesson & voice"}
-            </span>
-            <span>Saved on this device</span>
           </div>
           {player.ready && player.time >= player.total && (
             <Button

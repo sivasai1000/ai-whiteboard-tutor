@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLessons } from "@/features/library/LessonProvider";
 import { apiRequest } from "@/lib/api";
+import {
+  WORD_TIMING_VERSION,
+  validWordTimings,
+  estimateWordTimings,
+} from "@/lib/word-timing";
 import { buildTimeline, resolvePlayback } from "./timeline";
 
 function audioFromBase64(base64, mimeType) {
@@ -48,30 +53,74 @@ function measureAudio(blob, signal) {
   });
 }
 
+async function loadSampleAudio(scene, signal) {
+  const urls = [scene.sampleAudioUrl];
+  // Keep the original WAV as a fallback for browsers without AAC playback.
+  if (scene.sampleAudioUrl.endsWith(".m4a"))
+    urls.push(scene.sampleAudioUrl.replace(/\.m4a$/, ".wav"));
+  let failure;
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, { signal });
+      if (!response.ok)
+        throw new Error(
+          "The sample narration is unavailable. Please reload the page.",
+        );
+      const blob = await response.blob();
+      return { blob, duration: await measureAudio(blob, signal) };
+    } catch (error) {
+      signal.throwIfAborted();
+      failure = error;
+    }
+  }
+  throw failure;
+}
+
+function validCues(recording, steps) {
+  const cues = recording?.cues;
+  return (
+    Array.isArray(cues) &&
+    cues.length === steps.length &&
+    cues.every(
+      (cue, i) =>
+        Number.isFinite(cue.start) &&
+        Number.isFinite(cue.end) &&
+        cue.start >= 0 &&
+        cue.end > cue.start &&
+        (i ? Math.abs(cue.start - cues[i - 1].end) < 0.05 : cue.start < 0.05) &&
+        cue.text === steps[i].narration,
+    ) &&
+    Math.abs(cues.at(-1).end - recording.duration) < 0.5
+  );
+}
+
 export function useLessonPlayer(lesson) {
   const { getAudio, saveAudio } = useLessons();
+  const initialSpeed =
+    lesson.source === "sample" && (lesson.formatVersion || 1) < 3 ? 1.25 : 1;
   const [durations, setDurations] = useState({});
+  const [timings, setTimings] = useState({});
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadedCount, setLoadedCount] = useState(0);
   const [error, setError] = useState("");
-  const [speed, setSpeedState] = useState(1);
+  const [speed, setSpeedState] = useState(initialSpeed);
   const [attempt, setAttempt] = useState(0);
   const audioRef = useRef(null);
   const tracksRef = useRef([]);
   const timelineRef = useRef([]);
   const indexRef = useRef(-1);
   const playingRef = useRef(false);
-  const speedRef = useRef(1);
+  const speedRef = useRef(initialSpeed);
   const seekingRef = useRef(false);
   const positionRef = useRef(0);
   const switchRef = useRef(null);
   const operationRef = useRef(0);
 
   const timeline = useMemo(
-    () => buildTimeline(lesson.scenes, durations),
-    [lesson.scenes, durations],
+    () => buildTimeline(lesson.scenes, durations, timings),
+    [lesson.scenes, durations, timings],
   );
   timelineRef.current = timeline;
   const total = timeline.at(-1)?.end || 0;
@@ -127,6 +176,7 @@ export function useLessonPlayer(lesson) {
     const signal = controller.signal;
     const media = new Audio();
     media.preload = "auto";
+    media.preservesPitch = true;
     audioRef.current = media;
     const objectUrls = [];
     let frame;
@@ -136,6 +186,7 @@ export function useLessonPlayer(lesson) {
     setError("");
     setTime(0);
     setDurations({});
+    setTimings({});
     setPlaying(false);
     playingRef.current = false;
     positionRef.current = 0;
@@ -178,37 +229,106 @@ export function useLessonPlayer(lesson) {
 
     async function prepare() {
       const sceneDurations = {};
+      const sceneTimings = {};
       let nextIndex = 0;
-      // At most two paid speech requests at once. Each completed clip is cached immediately.
+      // Bundled samples are small static files; load them together. Keep paid
+      // speech generation limited to two requests and cache every completed clip.
       async function worker() {
         while (nextIndex < lesson.scenes.length && !signal.aborted && !failed) {
           const index = nextIndex++;
           const scene = lesson.scenes[index];
           let stored = await getAudio(lesson.id, scene.id);
           signal.throwIfAborted();
+          if (stored && scene.steps && !validCues(stored, scene.steps))
+            stored = null;
+          let changed = false;
           if (!stored) {
+            changed = true;
             if (lesson.source === "sample") {
-              const response = await fetch(scene.sampleAudioUrl, { signal });
-              if (!response.ok)
-                throw new Error(
-                  "The sample narration is unavailable. Please reload the page.",
-                );
-              const blob = await response.blob();
-              stored = { blob, duration: await measureAudio(blob, signal) };
+              stored = await loadSampleAudio(scene, signal);
+              if (scene.sampleCuesUrl) {
+                const response = await fetch(scene.sampleCuesUrl, { signal });
+                if (!response.ok)
+                  throw new Error(
+                    "The sample timing could not be loaded. Please retry.",
+                  );
+                const metadata = await response.json();
+                stored.cues = metadata.cues;
+                stored.wordTimingVersion = metadata.wordTimingVersion;
+                stored.sampleWordTimingVersion = WORD_TIMING_VERSION;
+              }
             } else {
               const payload = await apiRequest(
                 "/api/speech",
-                { text: scene.narration, token: scene.speechToken },
+                {
+                  text: scene.narration,
+                  token: scene.speechToken,
+                  segments: scene.steps?.map((step) => step.narration),
+                },
                 { signal },
               );
               const blob = audioFromBase64(payload.audio, payload.mimeType);
               // Read actual media duration so all controls follow the real audio clock.
-              stored = { blob, duration: await measureAudio(blob, signal) };
+              stored = {
+                blob,
+                duration: await measureAudio(blob, signal),
+                cues: payload.cues,
+                wordTimingVersion: payload.wordTimingVersion,
+              };
             }
             signal.throwIfAborted();
-            await saveAudio(lesson.id, scene.id, stored);
+            if (scene.steps && !validCues(stored, scene.steps))
+              throw new Error(
+                "The narration timing is incomplete. Please retry.",
+              );
+          } else if (
+            lesson.source === "sample" &&
+            scene.steps &&
+            scene.sampleCuesUrl &&
+            stored.sampleWordTimingVersion !== WORD_TIMING_VERSION
+          ) {
+            // Upgrade the existing preview's cue metadata without replacing its
+            // cached voice recording or creating a second lesson.
+            try {
+              const response = await fetch(scene.sampleCuesUrl, {
+                signal,
+                cache: "no-store",
+              });
+              if (response.ok) {
+                const metadata = await response.json();
+                const updated = {
+                  ...stored,
+                  cues: metadata.cues,
+                  sampleWordTimingVersion: WORD_TIMING_VERSION,
+                };
+                if (validCues(updated, scene.steps)) {
+                  stored = updated;
+                  changed = true;
+                }
+              }
+            } catch {
+              signal.throwIfAborted(); // Offline cached playback still works.
+            }
           }
+          if (
+            scene.steps &&
+            (stored.wordTimingVersion !== WORD_TIMING_VERSION ||
+              !stored.cues.every(validWordTimings))
+          ) {
+            stored = {
+              ...stored,
+              cues: stored.cues.map((cue) =>
+                validWordTimings(cue)
+                  ? cue
+                  : { ...cue, words: estimateWordTimings(cue) },
+              ),
+              wordTimingVersion: WORD_TIMING_VERSION,
+            };
+            changed = true;
+          }
+          if (changed) await saveAudio(lesson.id, scene.id, stored);
           signal.throwIfAborted();
+          if (scene.steps) sceneTimings[scene.id] = stored.cues;
           const url = URL.createObjectURL(stored.blob);
           objectUrls.push(url);
           tracksRef.current[index] = { url, duration: stored.duration };
@@ -217,11 +337,18 @@ export function useLessonPlayer(lesson) {
         }
       }
       try {
-        await Promise.all([worker(), worker()]);
+        const workers =
+          lesson.source === "sample" ? Math.min(6, lesson.scenes.length) : 2;
+        await Promise.all(Array.from({ length: workers }, worker));
         signal.throwIfAborted();
         setDurations(sceneDurations);
+        setTimings(sceneTimings);
         // Set the ref synchronously before initial media events can fire.
-        timelineRef.current = buildTimeline(lesson.scenes, sceneDurations);
+        timelineRef.current = buildTimeline(
+          lesson.scenes,
+          sceneDurations,
+          sceneTimings,
+        );
         setLoading(false);
         switchRef.current(0, 0, false);
       } catch (failure) {
@@ -303,7 +430,6 @@ export function useLessonPlayer(lesson) {
   return {
     time,
     total,
-    timeline,
     state: resolvePlayback(timeline, time),
     playing,
     loading,

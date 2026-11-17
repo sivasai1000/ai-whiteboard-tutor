@@ -4,10 +4,6 @@ out/
 .env*
 !.env.example
 .vercel/
-test-results/
-playwright-report/
-coverage/
 artifacts/
 .DS_Store
 *.log
-.vercel

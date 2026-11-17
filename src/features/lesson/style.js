@@ -8,31 +8,60 @@ export const lessonStyles = {
   toolbarTitle:
     "max-w-[48vw] truncate text-sm font-medium tracking-[-0.02em] sm:max-w-none sm:text-base",
   body: "flex min-h-0 flex-1 flex-col xl:flex-row",
-  main: "relative flex min-w-0 flex-1 flex-col px-4 pb-5 pt-6 sm:px-7 sm:pt-8",
-  sceneHeading: "flex items-start justify-between gap-4 pb-6",
+  main: "relative flex min-h-0 min-w-0 flex-1 flex-col px-4 pb-5 pt-6 sm:px-7 sm:pt-8 lg:overflow-y-auto",
+  fullscreen:
+    "h-dvh w-screen overflow-y-auto bg-background px-4 py-4 sm:px-8 sm:py-5",
+  sceneHeading: "flex shrink-0 items-start justify-between gap-4 pb-5",
   sceneCount:
-    "mb-2 font-mono text-[10px] uppercase tracking-[0.16em] text-primary/80",
-  sceneTitle: "text-lg font-medium tracking-[-0.03em] sm:text-[23px]",
+    "mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-primary",
+  sceneTitle:
+    "font-heading text-lg font-semibold leading-tight tracking-[-0.025em] sm:text-[22px]",
+  boardStage: "relative flex min-h-[440px] flex-1 flex-col sm:min-h-[480px]",
   boardShell:
-    "relative flex min-h-64 flex-1 items-center overflow-hidden rounded-xl border border-white/[0.045] bg-[#141419] sm:min-h-80",
-  board: "h-full max-h-[62dvh] w-full min-w-0 select-none",
+    "relative flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_4px_28px_-16px_rgba(30,41,59,0.18)]",
+  boardHeader:
+    "flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-3 sm:px-5",
   boardNote:
-    "absolute left-4 top-4 flex items-center gap-2 text-[10px] text-muted-foreground/60",
+    "flex min-w-0 items-center gap-2 text-xs font-medium text-slate-600",
+  boardMark:
+    "flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/7 text-primary",
+  boardStep:
+    "ml-2 hidden border-l border-slate-200 pl-3 font-mono text-[10px] font-normal tabular-nums text-slate-400 sm:inline",
+  boardControls: "flex shrink-0 items-center gap-0.5",
+  boardButton:
+    "size-11 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 sm:size-8",
+  fitButton:
+    "h-11 w-11 rounded-lg px-0 font-mono text-[11px] tabular-nums text-slate-500 hover:bg-slate-100 sm:h-8",
+  fullscreenButton: "ml-1 border-l border-slate-200 pl-1",
+  boardViewport:
+    "relative flex min-h-[260px] flex-1 items-center overflow-auto overscroll-contain bg-[radial-gradient(circle,#dfe5ef_0.8px,transparent_0.8px)] [background-size:24px_24px] px-3 py-5 sm:px-7 sm:py-6",
+  simulationViewport: "bg-[#0b1222] bg-none px-0 py-0 sm:px-0 sm:py-0",
+  diagramFrame: "mx-auto shrink-0",
+  diagramFrameFit: "max-w-[1040px]",
+  board: "h-full w-full min-w-0 select-none",
+  diagramFit: "lg:max-h-[calc(100dvh-360px)] lg:min-h-[240px]",
+  diagramFullscreen: "max-h-[calc(100dvh-270px)] min-h-[240px]",
+  mediaOverlay: "relative z-20 flex w-full shrink-0 flex-col bg-white",
   caption:
-    "mx-auto flex min-h-20 max-w-3xl items-center justify-center px-3 py-4 text-center text-xs leading-relaxed text-muted-foreground sm:text-sm",
+    "flex min-h-16 w-full items-center justify-center px-5 pb-4 pt-2 text-center sm:px-10",
+  subtitleStack: "grid w-full place-items-center",
+  subtitleMeasure:
+    "invisible col-start-1 row-start-1 max-w-[62ch] text-pretty text-[13px] leading-[1.7] sm:text-sm",
+  subtitleText:
+    "col-start-1 row-start-1 max-w-[62ch] text-pretty text-[13px] leading-[1.7] text-slate-600 empty:hidden sm:text-sm",
   player:
-    "mx-auto flex w-full max-w-3xl items-center gap-3 rounded-2xl border border-white/[0.08] bg-[#212127] px-4 py-3 shadow-xl shadow-black/10 sm:gap-5 sm:px-5",
+    "flex w-full flex-col border-t border-slate-100 bg-slate-50/65 px-4 pb-3 pt-2 sm:px-5",
+  playerControls: "flex min-h-11 items-center gap-2 sm:gap-3",
   playButton:
-    "size-11 shrink-0 rounded-full bg-primary text-primary-foreground hover:bg-primary/90",
-  playerMiddle: "min-w-0 flex-1 space-y-2",
-  playerLabel:
-    "flex items-center justify-between gap-3 text-[10px] text-muted-foreground",
-  segments: "mt-5 flex flex-wrap items-center justify-center gap-1.5",
-  segment:
-    "flex size-7 items-center justify-center rounded-full text-[10px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary",
-  segmentActive: "bg-primary/10 text-primary ring-1 ring-primary/20",
-  disclosure:
-    "mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground/70",
+    "size-11 shrink-0 rounded-full bg-primary text-white shadow-sm shadow-primary/15 hover:bg-primary/90 sm:size-9",
+  mediaButton:
+    "size-11 shrink-0 rounded-lg text-slate-500 hover:bg-slate-200/60 hover:text-slate-900 sm:size-9",
+  mediaTime:
+    "ml-1 whitespace-nowrap font-mono text-[11px] tabular-nums text-slate-500",
+  speedButton:
+    "ml-auto h-11 w-12 rounded-lg px-0 text-[11px] font-medium text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 sm:h-9",
+  mediaTimeline:
+    "py-2 [&_[data-slot=slider-track]]:h-1 [&_[data-slot=slider-track]]:bg-slate-200 [&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:size-3 [&_[data-slot=slider-thumb]]:border-2 [&_[data-slot=slider-thumb]]:border-white [&_[data-slot=slider-thumb]]:bg-primary [&_[data-slot=slider-thumb]]:shadow-sm",
   loading:
     "absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-background/90 px-6 text-center backdrop-blur-sm",
   error:
@@ -41,10 +70,30 @@ export const lessonStyles = {
 };
 
 export const boardColors = {
-  violet: "#b5a0f5",
-  cyan: "#79c9dc",
-  amber: "#e9bd76",
-  green: "#8ad6b3",
-  white: "#e5e4ed",
-  muted: "#92909f",
+  violet: "#7950b0",
+  cyan: "#246b9a",
+  amber: "#956019",
+  green: "#286f57",
+  // Keep the schema's neutral color name; render it as dark ink on light paper.
+  white: "#202938",
+  muted: "#606b7d",
+};
+
+export const visualizationColors = {
+  indigo: { ink: "#4055ce", soft: "#eef1ff" },
+  teal: { ink: "#178071", soft: "#e5f5ef" },
+  amber: { ink: "#a76d1d", soft: "#fff3dc" },
+  rose: { ink: "#b84c74", soft: "#fbeaf1" },
+};
+
+export const moonSceneStyles = {
+  canvas: "block h-auto w-full bg-[#0b1222] font-sans",
+  compact: "[&_text]:text-[20px] [&_text]:tracking-normal",
+  eyebrow: "fill-[#9fafd0] text-[12px] font-medium tracking-[0.14em]",
+  caption: "fill-[#f1f5fb] text-[20px] font-medium tracking-tight",
+  label: "fill-[#e5edf9] text-[18px] font-medium",
+  small: "fill-[#abbcd6] text-[15px]",
+  fine: "fill-[#8d9eb9] text-[11px]",
+  phaseName: "fill-[#f1f5fb] text-[23px] font-medium tracking-tight",
+  takeaway: "fill-[#bdccff] text-[17px] font-medium",
 };

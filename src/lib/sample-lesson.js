@@ -1,183 +1,215 @@
-/** A disclosed, prewritten preview. New topics always go through the real AI API. */
-export const sampleTopic = "Why do we have seasons?";
+import { MOON_NODE_IDS } from "./moon-scene.js";
 
-function element(
-  id,
-  type,
-  x,
-  y,
-  width,
-  height,
-  text = "",
-  color = "white",
-  appearAt = 0,
-) {
-  return { id, type, x, y, width, height, text, color, appearAt, points: "" };
-}
-const text = (id, x, y, value, color = "white", appearAt = 0) =>
-  element(id, "text", x, y, 0, 0, value, color, appearAt);
-const sun = [
-  element("sun-halo", "circle", 480, 270, 130, 130, "", "amber"),
-  element("sun", "circle", 480, 270, 92, 92, "", "amber"),
-  text("sun-label", 480, 352, "THE SUN", "amber"),
-];
-const earth = (x, y, label, at = 0) => [
-  element(`earth-${label}`, "circle", x, y, 58, 58, "", "cyan", at),
-  element(`axis-${label}`, "line", x - 18, y + 44, 36, -88, "", "white", at),
-  text(`label-${label}`, x, y + 75, label, "muted", at),
-];
-
-export const sampleScenes = [
+/** Versioned preview: narration, measured cue files and visual states travel together. */
+export const sampleTopic = "Why does the Moon change shape?";
+export const sampleDescription =
+  "Follow the sunlight. See the Moon from two perspectives.";
+const visual = (phase) => ({
+  layout: "moon-phases",
+  caption: "One Moon. A changing view.",
+  unit: "",
+  nodes: [
+    {
+      id: "sun",
+      label: "Sun",
+      detail: "Our light source",
+      value: 0,
+      color: "amber",
+      symbol: "sun",
+    },
+    {
+      id: "earth",
+      label: "Earth",
+      detail: "Our observing position",
+      value: 0,
+      color: "teal",
+      symbol: "earth",
+    },
+    {
+      id: "moon",
+      label: "Moon",
+      detail: "Reflects sunlight",
+      value: phase,
+      color: "indigo",
+      symbol: "none",
+    },
+    {
+      id: "view",
+      label: "View from Earth",
+      detail: "The apparent illuminated shape",
+      value: 0,
+      color: "indigo",
+      symbol: "none",
+    },
+  ],
+  links: [],
+});
+const step = (narration, note, focus, endPhase) => ({
+  narration,
+  note,
+  focus,
+  visible: [...MOON_NODE_IDS],
+  dim: [],
+  updates:
+    endPhase === undefined
+      ? []
+      : [{ id: "moon", label: "Moon", value: endPhase }],
+});
+const chapters = [
   {
-    id: "seasons-1",
-    title: "A small tilt. A big difference.",
-    duration: 21,
-    narration:
-      "Why does the same place feel warm in July and cold in January? The answer begins with a small tilt. Earth travels around the Sun, but its axis is tilted about twenty-three and a half degrees. That tilt changes how sunlight reaches us.",
-    elements: [
-      ...sun,
-      ...earth(200, 270, "EARTH"),
-      element("sunlight", "arrow", 392, 270, -128, 0, "", "amber", 0.12),
-      text("tilt", 220, 165, "23.5°", "violet", 0.47),
-      text("callout", 735, 230, "The secret is the tilt.", "violet", 0.65),
-      text("callout-sub", 735, 268, "Not the distance.", "muted", 0.8),
-      text("footer", 480, 457, "ONE ORBIT  ≈  ONE YEAR", "muted", 0.9),
-    ],
-  },
-  {
-    id: "seasons-2",
-    title: "Meet Earth's tilted axis",
-    duration: 18,
-    narration:
-      "Imagine a line running through the North and South Poles. This is Earth's axis, the line it spins around. As Earth completes its yearly orbit, the axis keeps pointing in nearly the same direction in space. It does not tip back and forth each season.",
-    elements: [
-      element("earth", "circle", 440, 270, 220, 220, "", "cyan"),
-      element("equator", "line", 336, 230, 208, 80, "", "cyan", 0.1),
-      element("axis", "line", 372, 435, 136, -330, "", "white", 0.15),
-      text("north", 575, 120, "NORTH POLE", "muted", 0.2),
-      text("south", 268, 428, "SOUTH POLE", "muted", 0.25),
-      text("angle", 615, 215, "23.5° tilt", "violet", 0.43),
-      text("note", 480, 495, "Same direction. All year.", "white", 0.68),
-    ],
-  },
-  {
-    id: "seasons-3",
-    title: "Tilt toward the Sun → summer",
-    duration: 20,
-    narration:
-      "When the Northern Hemisphere tilts toward the Sun, sunlight hits it more directly. The same amount of solar energy is concentrated over a smaller area. Days are also longer, giving the ground more time to warm up. Together, these effects produce northern summer.",
-    elements: [
-      element("earth", "circle", 650, 280, 190, 190, "", "cyan"),
-      element("axis", "line", 700, 405, -100, -250, "", "white"),
-      element("sun", "circle", 190, 250, 95, 95, "", "amber"),
-      element("ray-1", "arrow", 270, 210, 290, 0, "", "amber", 0.08),
-      element("ray-2", "arrow", 270, 250, 290, 0, "", "amber", 0.16),
-      element("ray-3", "arrow", 270, 290, 290, 0, "", "amber", 0.24),
-      text("energy", 420, 160, "More direct sunlight", "amber", 0.38),
-      text("summer", 665, 95, "NORTHERN SUMMER", "violet", 0.05),
-      text(
-        "days",
-        480,
-        460,
-        "Longer days  +  concentrated energy",
-        "white",
-        0.7,
+    title: "The Moon borrows its light.",
+    visual: visual(0.125),
+    steps: [
+      step(
+        "Look at the Sun on the left. Its light travels toward Earth and the Moon.",
+        "The Sun is the light source",
+        ["sun"],
+      ),
+      step(
+        "The Moon reflects sunlight. Away from eclipses, one half of its surface is always lit.",
+        "Sun-facing half: lit · opposite half: dark",
+        ["moon"],
+      ),
+      step(
+        "Compare the orbit diagram with our view from Earth. We see only part of that illuminated half.",
+        "Same Moon, two different perspectives",
+        ["earth", "view"],
       ),
     ],
   },
   {
-    id: "seasons-4",
-    title: "Tilt away → winter",
-    duration: 20,
-    narration:
-      "Six months later, Earth is on the other side of its orbit. The Northern Hemisphere now tilts away from the Sun. Sunlight arrives at a shallower angle and spreads across a larger area. Shorter days mean less heating, so temperatures generally fall. This is northern winter.",
-    elements: [
-      element("earth", "circle", 290, 280, 190, 190, "", "cyan"),
-      element("axis", "line", 340, 405, -100, -250, "", "white"),
-      element("sun", "circle", 760, 250, 95, 95, "", "amber"),
-      element("ray-1", "arrow", 680, 215, -290, -50, "", "amber", 0.1),
-      element("ray-2", "arrow", 680, 260, -290, 0, "", "amber", 0.18),
-      text("winter", 290, 95, "NORTHERN WINTER", "violet", 0),
-      text("energy", 550, 340, "Energy spreads out", "muted", 0.45),
-      text(
-        "days",
-        480,
-        460,
-        "Shorter days  +  less direct sunlight",
-        "white",
+    title: "From new Moon to a crescent.",
+    visual: visual(0),
+    steps: [
+      step(
+        "At new Moon, the sunlit side faces away from Earth, so the visible disk appears dark.",
+        "New Moon · the sunlit side faces away",
+        ["view"],
+      ),
+      step(
+        "Watch the Moon move around Earth. A growing sliver of its illuminated side comes into view.",
+        "Moving from new Moon toward a crescent",
+        ["moon", "view"],
+        0.125,
+      ),
+      step(
+        "This is a waxing crescent. Waxing means the illuminated part we can see is getting larger.",
+        "Waxing = the visible lit part grows",
+        ["view"],
+      ),
+    ],
+  },
+  {
+    title: "First quarter, half a disk.",
+    visual: visual(0.125),
+    steps: [
+      step(
+        "Let the Moon move farther around Earth. Keep watching the bright shape in our Earth-view window.",
+        "Follow the changing angle",
+        ["moon", "view"],
+        0.25,
+      ),
+      step(
+        "At first quarter, half of the visible disk is illuminated, even though half the entire Moon remains sunlit.",
+        "First quarter · 50% of the visible disk lit",
+        ["view"],
+      ),
+      step(
+        "The bright side appears on the right here. This illustration uses a Northern Hemisphere viewing orientation.",
+        "Orientation matters: this is a northern view",
+        ["view"],
+      ),
+    ],
+  },
+  {
+    title: "The bright face comes into view.",
+    visual: visual(0.25),
+    steps: [
+      step(
+        "As the Moon continues around Earth, more of its illuminated side becomes visible, growing toward full Moon.",
+        "Waxing: from half-lit toward fully lit",
+        ["moon", "view"],
+        0.5,
+      ),
+      step(
+        "Now the Moon is opposite the Sun in our sky. Its visible disk is almost completely illuminated.",
+        "Full Moon · the visible disk is lit",
+        ["view"],
+      ),
+      step(
+        "The Moon has not started glowing by itself. We are looking at the side that reflects sunlight.",
+        "Moonlight is reflected sunlight",
+        ["sun", "view"],
+      ),
+    ],
+  },
+  {
+    title: "Then the bright shape shrinks.",
+    visual: visual(0.5),
+    steps: [
+      step(
+        "Continue around the orbit. The visible illuminated part now gets smaller, a change we call waning.",
+        "Waning = the visible lit part shrinks",
+        ["moon", "view"],
         0.75,
       ),
-    ],
-  },
-  {
-    id: "seasons-5",
-    title: "One planet, opposite seasons",
-    duration: 19,
-    narration:
-      "The two hemispheres have opposite seasons. When it is summer in the north, it is winter in the south. Around the March and September equinoxes, neither hemisphere tilts strongly toward the Sun. Day and night are roughly equal in length across much of Earth.",
-    elements: [
-      element("north-box", "rect", 110, 140, 315, 200, "", "violet"),
-      element("south-box", "rect", 535, 140, 315, 200, "", "cyan"),
-      text("north", 267, 195, "NORTHERN HEMISPHERE", "muted"),
-      text("south", 692, 195, "SOUTHERN HEMISPHERE", "muted"),
-      text("north-summer", 267, 265, "Summer", "amber", 0.05),
-      text("south-winter", 692, 265, "Winter", "cyan", 0.16),
-      element("opposite", "arrow", 442, 245, 76, 0, "", "muted", 0.25),
-      text("equinox", 480, 430, "EQUINOX", "violet", 0.5),
-      text("equal", 480, 472, "Day  ≈  Night", "white", 0.72),
-    ],
-  },
-  {
-    id: "seasons-6",
-    title: "The idea to take with you",
-    duration: 19,
-    narration:
-      "Remember the chain: Earth's tilt changes the angle of sunlight and the length of the day. Those changes create the seasons as Earth orbits the Sun. Distance is not the main cause. Now try explaining why Australia celebrates Christmas during summer. You already have the answer.",
-    elements: [
-      element("box1", "rect", 60, 185, 225, 115, "", "violet"),
-      text("tilt", 172, 250, "Earth's tilt", "violet"),
-      element("arr1", "arrow", 300, 242, 55, 0, "", "muted", 0.13),
-      element("box2", "rect", 370, 185, 225, 115, "", "cyan", 0.2),
-      text("light", 482, 230, "Sunlight angle", "cyan", 0.2),
-      text("length", 482, 270, "+ day length", "cyan", 0.27),
-      element("arr2", "arrow", 610, 242, 55, 0, "", "muted", 0.39),
-      element("box3", "rect", 680, 185, 225, 115, "", "amber", 0.46),
-      text("season", 792, 250, "Seasons", "amber", 0.46),
-      text(
-        "question",
-        480,
-        416,
-        "Christmas in Australia = summer. Why?",
-        "white",
-        0.75,
+      step(
+        "At third quarter, half the visible disk is illuminated again, now on the left in this view.",
+        "Third quarter · the opposite half is lit",
+        ["view"],
       ),
-      text(
-        "hint",
-        480,
-        465,
-        "Ask your tutor, or explain it in your own words.",
-        "muted",
-        0.9,
+      step(
+        "The Moon moves through a waning crescent and returns toward new Moon, ready to repeat the cycle.",
+        "Through a crescent, back toward new Moon",
+        ["moon", "view"],
+        1,
       ),
     ],
   },
-].map((scene, index) => ({
+  {
+    title: "A changing view, not a changing Moon.",
+    visual: visual(1),
+    steps: [
+      step(
+        "Watch one complete phase cycle: the bright shape grows, then shrinks. In nature, this takes about twenty-nine-and-a-half days.",
+        "One phase cycle ≈ 29.5 days",
+        ["moon", "view"],
+        2,
+      ),
+      step(
+        "Phases are not Earth's shadow. The Moon's tilted orbit usually prevents eclipses; our simplified diagram omits that tilt.",
+        "Changing viewpoint causes phases, not Earth's shadow",
+        ["earth", "view"],
+      ),
+      step(
+        "Remember: sunlight illuminates half the Moon, while its position changes how much of that half we see.",
+        "Sunlight + changing viewpoint = Moon phases",
+        ["sun", "moon", "view"],
+      ),
+    ],
+  },
+];
+export const sampleScenes = chapters.map((scene, index) => ({
   ...scene,
-  sampleAudioUrl: `/sample/scene-${index + 1}.wav`,
+  id: `moon-phases-v1-${index + 1}`,
+  narration: scene.steps.map((step) => step.narration).join(" "),
+  duration: 22,
+  sampleAudioUrl: `/sample/moon-phases-v1/scene-${index + 1}.m4a`,
+  sampleCuesUrl: `/sample/moon-phases-v1/scene-${index + 1}.json`,
 }));
-
 export function createSampleLesson() {
   return {
     id: crypto.randomUUID(),
     topic: sampleTopic,
-    title: "Why do we have seasons?",
+    title: sampleTopic,
     summary:
-      "A small tilt explains a whole year. Discover the connection between Earth's axis, sunlight, and the seasons.",
+      "Explore reflected sunlight, new Moon, crescents, quarter phases and full Moon using a synchronized orbital model and Earth-view illustration.",
     level: "Beginner",
     source: "sample",
+    formatVersion: 3,
     createdAt: new Date().toISOString(),
     saved: false,
-    scenes: structuredClone(sampleScenes),
     messages: [],
+    scenes: structuredClone(sampleScenes),
   };
 }

@@ -1,5 +1,5 @@
 /** The board is a pure function of the audio clock, so seeking is reversible. */
-export function buildTimeline(scenes, durations = {}) {
+export function buildTimeline(scenes, durations = {}, timings = {}) {
   let cursor = 0;
   return scenes.map((scene) => {
     const measured = durations[scene.id];
@@ -7,7 +7,13 @@ export function buildTimeline(scenes, durations = {}) {
       Number.isFinite(measured) && measured > 0
         ? measured
         : Math.max(1, scene.duration || 20);
-    const segment = { scene, start: cursor, end: cursor + duration, duration };
+    const segment = {
+      scene,
+      start: cursor,
+      end: cursor + duration,
+      duration,
+      cues: timings[scene.id] || scene.cues || [],
+    };
     cursor = segment.end;
     return segment;
   });
@@ -31,8 +37,29 @@ export function resolvePlayback(timeline, time) {
     0,
     Math.min(clampedTime - segment.start, segment.duration),
   );
+  const stepIndex = Math.max(
+    0,
+    segment.cues.findIndex(
+      (cue, i) => localTime < cue.end || i === segment.cues.length - 1,
+    ),
+  );
   return {
     ...segment,
+    stepIndex,
+    cue: segment.cues[stepIndex],
+    cueProgress: segment.cues[stepIndex]
+      ? Math.max(
+          0,
+          Math.min(
+            1,
+            (localTime - segment.cues[stepIndex].start) /
+              Math.max(
+                0.001,
+                segment.cues[stepIndex].end - segment.cues[stepIndex].start,
+              ),
+          ),
+        )
+      : 0,
     index,
     time: clampedTime,
     localTime,

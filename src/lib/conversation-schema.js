@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const MAX_CHAT_INPUT = 4000;
-export const MAX_CONTEXT_MESSAGES = 24;
-export const MAX_CONTEXT_CHARACTERS = 48000;
+const MAX_CONTEXT_MESSAGES = 24;
+const MAX_CONTEXT_CHARACTERS = 48000;
 
 const textPartSchema = z
   .object({
@@ -13,6 +13,8 @@ const textPartSchema = z
 
 export const conversationRequestSchema = z
   .object({
+    model: z.string().min(1).max(100).optional(),
+    reasoningEffort: z.enum(["low", "medium", "high"]).default("low"),
     messages: z
       .array(
         z

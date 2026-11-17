@@ -103,9 +103,30 @@ export function ConversationProvider({ children }) {
     [mutate, publish],
   );
 
+  const setSaved = useCallback(
+    (id, saved) =>
+      mutate(async () => {
+        const existing = records.current.find((item) => item.id === id);
+        if (!existing) return;
+        const next = { ...existing, saved: Boolean(saved) };
+        await writeConversation(next);
+        publish(records.current.map((item) => (item.id === id ? next : item)));
+        setStorageError("");
+      }),
+    [mutate, publish],
+  );
+
   const value = useMemo(
-    () => ({ conversations, ready, storageError, create, update, remove }),
-    [conversations, ready, storageError, create, update, remove],
+    () => ({
+      conversations,
+      ready,
+      storageError,
+      create,
+      update,
+      remove,
+      setSaved,
+    }),
+    [conversations, ready, storageError, create, update, remove, setSaved],
   );
   return (
     <ConversationContext.Provider value={value}>

@@ -3,8 +3,4 @@
 .next
 node_modules
 artifacts
-test-results
-playwright-report
-coverage
-tests
 *.log
