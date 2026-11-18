@@ -1,33 +1,97 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { zodTextFormat } from "openai/helpers/zod";
-import { generatedLessonSchema, wordCount } from "../lib/lesson-schema.js";
-import { checkVisualLesson } from "../lib/visual-lesson.js";
+import { lessonPlanSchema, wordCount } from "../lib/lesson-schema.js";
+import { compileLessonPlan, inspectLesson } from "../lib/lesson-plan.js";
 import { createOpenAI } from "./openai.js";
 import { resolveTextModel } from "./config.js";
 import { signNarration } from "./speech-tokens.js";
 import { AppError } from "./errors.js";
+import { LessonQualityError } from "./lesson-quality.js";
 import { LESSON_PROMPT } from "./prompts.js";
 import { reviewLesson } from "./lesson-review.js";
 
-function validateContent(content) {
-  const words = content.scenes.reduce(
-    (total, scene) =>
-      total + wordCount(scene.steps.map((step) => step.narration).join(" ")),
-    0,
-  );
-  const visualIssues = checkVisualLesson(content);
-  if (words < 230 || words > 340 || visualIssues.length) {
-    // Log only structural diagnostics, never lesson text or credentials.
-    console.warn("[braynix:lesson-validation]", {
-      words,
-      issues: visualIssues,
-    });
-    throw new AppError(
-      "LESSON_QUALITY",
-      "The generated lesson didn't pass our length or diagram checks. Please try again with a more specific topic.",
-      502,
-    );
+/** At most two plans. Provider failures and refusals never trigger paid retries. */
+async function createReviewedLesson(client, input, { signal } = {}) {
+  let previousPlan = null;
+  let issues = [];
+  for (let attempt = 0; attempt < 2; attempt++) {
+    signal?.throwIfAborted();
+    let stage = "planning";
+    try {
+      const request = { topic: input.topic, level: input.level };
+      if (attempt) {
+        request.correction = {
+          instruction:
+            "Repair the listed issues in this lesson plan. Return the complete corrected plan in the same schema. Preserve correct teaching content; do not bypass a check or replace the requested topic.",
+          issues,
+          previousPlan,
+        };
+      }
+      const response = await client.responses.parse(
+        {
+          model: input.model,
+          store: false,
+          reasoning: { effort: input.reasoningEffort || "low" },
+          max_output_tokens: 14_000,
+          input: [
+            { role: "developer", content: LESSON_PROMPT },
+            { role: "user", content: JSON.stringify(request) },
+          ],
+          text: {
+            format: zodTextFormat(lessonPlanSchema, "whiteboard_lesson_plan"),
+          },
+        },
+        { signal },
+      );
+      const refused = response.output?.some((item) =>
+        item.content?.some((part) => part.type === "refusal"),
+      );
+      if (refused)
+        throw new AppError(
+          "TOPIC_UNSUPPORTED",
+          "The tutor can’t teach that request. Try a different educational topic.",
+          422,
+        );
+      if (response.status !== "completed" || !response.output_parsed) {
+        throw new LessonQualityError([
+          "The lesson plan was incomplete. Use exactly six short chapters with three steps each and concise diagrams.",
+        ]);
+      }
+      previousPlan = response.output_parsed;
+      stage = "structure";
+      const compiled = compileLessonPlan(previousPlan);
+      if (compiled.issues.length) throw new LessonQualityError(compiled.issues);
+      stage = "accuracy";
+      const content = await reviewLesson(
+        compiled.content,
+        client,
+        input.model,
+        signal,
+      );
+      const remaining = inspectLesson(content);
+      if (remaining.length) throw new LessonQualityError(remaining);
+      return content;
+    } catch (cause) {
+      signal?.throwIfAborted();
+      // Malformed structured responses can be repaired, but billing, network,
+      // authentication and cancellation errors must propagate immediately.
+      const error =
+        cause?.name === "ZodError" || cause instanceof SyntaxError
+          ? new LessonQualityError([
+              "The provider response did not match the required lesson structure. Return every required field with valid values.",
+            ])
+          : cause;
+      if (!(error instanceof LessonQualityError)) throw error;
+      console.warn("[braynix:lesson-quality]", {
+        attempt: attempt + 1,
+        repairing: attempt === 0,
+        stage,
+        issueCount: error.issues.length,
+      });
+      if (attempt === 1) throw error;
+      issues = error.issues;
+    }
   }
 }
 
@@ -36,44 +100,16 @@ export async function generateLesson(
   { signal } = {},
 ) {
   const configuredModel = resolveTextModel(model);
-  const client = createOpenAI();
-  const response = await client.responses.parse(
+  const content = await createReviewedLesson(
+    createOpenAI(),
     {
+      topic,
+      level,
       model: configuredModel,
-      store: false,
-      reasoning: { effort: reasoningEffort },
-      max_output_tokens: 14_000,
-      input: [
-        { role: "developer", content: LESSON_PROMPT },
-        { role: "user", content: JSON.stringify({ topic, level }) },
-      ],
-      text: {
-        format: zodTextFormat(generatedLessonSchema, "whiteboard_lesson"),
-      },
+      reasoningEffort,
     },
     { signal },
   );
-
-  if (response.status !== "completed" || !response.output_parsed) {
-    const refused = response.output?.some((item) =>
-      item.content?.some((part) => part.type === "refusal"),
-    );
-    throw new AppError(
-      refused ? "TOPIC_UNSUPPORTED" : "LESSON_INCOMPLETE",
-      refused
-        ? "The tutor can't teach that request. Try a different educational topic."
-        : "The lesson wasn't fully generated. Please try a more specific topic.",
-      refused ? 422 : 502,
-    );
-  }
-
-  const draft = generatedLessonSchema.parse(response.output_parsed);
-  validateContent(draft);
-  const content = generatedLessonSchema.parse(
-    await reviewLesson(draft, client, configuredModel, signal),
-  );
-  validateContent(content);
-
   return {
     id: randomUUID(),
     topic,

@@ -36,19 +36,19 @@
 
 :root {
   color-scheme: light;
-  --background: #f7f8fc;
-  --foreground: #202938;
+  --background: #fafafa;
+  --foreground: #24252a;
   --card: #ffffff;
   --popover: #ffffff;
-  --primary: #3859c7;
+  --primary: #5148c7;
   --primary-foreground: #ffffff;
-  --secondary: #edf0f7;
-  --muted: #f0f2f7;
-  --muted-foreground: #606b7d;
-  --accent: #e8edfc;
+  --secondary: #f1f1f2;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #ededf0;
   --destructive: #b83e44;
-  --border: #dce1ec;
-  --sidebar: #eef1f8;
+  --border: #e4e4e7;
+  --sidebar: #f5f5f5;
   --board: #ffffff;
 }
 

@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 import {
-  clearLessons,
   readAudio,
   readLessons,
   removeLesson,
@@ -103,17 +102,6 @@ export function LessonProvider({ children }) {
     [enqueue],
   );
 
-  const clearLibrary = useCallback(
-    () =>
-      enqueue(async () => {
-        await clearLessons();
-        current.current = [];
-        setLessons([]);
-        setStorageError("");
-      }),
-    [enqueue],
-  );
-
   const getLesson = useCallback(
     (id) => lessons.find((lesson) => lesson.id === id),
     [lessons],
@@ -139,7 +127,6 @@ export function LessonProvider({ children }) {
         getLesson,
         getAudio,
         saveAudio,
-        clearLibrary,
       }}
     >
       {children}

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { CircleIcon } from "lucide-react";
+import { CheckIcon } from "lucide-react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 
 function DropdownMenu({ ...props }) {
@@ -67,7 +67,7 @@ function DropdownMenuRadioItem({ className, children, ...props }) {
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <CircleIcon className="size-2 fill-current" />
+          <CheckIcon className="size-3.5" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}

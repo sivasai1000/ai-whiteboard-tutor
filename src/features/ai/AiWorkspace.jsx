@@ -65,15 +65,7 @@ function ChatSession({ conversation, model }) {
           />
         </>
       ) : (
-        <ChatWelcome
-          disabled={chat.busy || Boolean(chat.storageError)}
-          onSuggestion={(prompt) => {
-            chat.setInput(prompt);
-            document.getElementById("ai-chat-input")?.focus();
-          }}
-        >
-          {composer}
-        </ChatWelcome>
+        <ChatWelcome>{composer}</ChatWelcome>
       )}
       {error && (
         <div role="alert" className={s.alert}>
@@ -113,8 +105,7 @@ function ChatSession({ conversation, model }) {
           )}
           {composer}
           <p className={s.footer}>
-            AI can make mistakes. Check important details. · Saved on this
-            device
+            AI can make mistakes. Check important details.
           </p>
         </div>
       )}

@@ -57,13 +57,3 @@ export async function writeAudio(lessonId, sceneId, audio) {
   }
   await tx.done;
 }
-
-export async function clearLessons() {
-  const db = await getDatabase();
-  const tx = db.transaction(["lessons", "audio"], "readwrite");
-  await Promise.all([
-    tx.objectStore("lessons").clear(),
-    tx.objectStore("audio").clear(),
-  ]);
-  await tx.done;
-}

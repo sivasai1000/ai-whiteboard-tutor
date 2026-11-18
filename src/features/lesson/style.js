@@ -1,21 +1,21 @@
 export const lessonStyles = {
   workspace:
-    "flex min-h-[calc(100dvh-64px)] flex-1 flex-col lg:h-dvh lg:min-h-0",
+    "flex min-h-[calc(100dvh-52px)] flex-1 flex-col lg:h-dvh lg:min-h-0",
   toolbar:
-    "flex min-h-20 shrink-0 items-center justify-between gap-3 border-b border-border px-4 sm:px-7",
+    "flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-border px-4 sm:px-7",
   toolbarKicker:
     "mb-1.5 flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground",
   toolbarTitle:
     "max-w-[48vw] truncate text-sm font-medium tracking-[-0.02em] sm:max-w-none sm:text-base",
   body: "flex min-h-0 flex-1 flex-col xl:flex-row",
-  main: "relative flex min-h-0 min-w-0 flex-1 flex-col px-4 pb-5 pt-6 sm:px-7 sm:pt-8 lg:overflow-y-auto",
+  main: "relative flex min-h-0 min-w-0 flex-1 flex-col px-3 pb-4 pt-4 sm:px-6 sm:pt-6 lg:overflow-y-auto",
   fullscreen:
     "h-dvh w-screen overflow-y-auto bg-background px-4 py-4 sm:px-8 sm:py-5",
   sceneHeading: "flex shrink-0 items-start justify-between gap-4 pb-5",
   sceneCount:
     "mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-primary",
   sceneTitle:
-    "font-heading text-lg font-semibold leading-tight tracking-[-0.025em] sm:text-[22px]",
+    "font-heading text-base font-medium leading-tight tracking-[-0.025em] sm:text-xl",
   boardStage: "relative flex min-h-[440px] flex-1 flex-col sm:min-h-[480px]",
   boardShell:
     "relative flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_4px_28px_-16px_rgba(30,41,59,0.18)]",

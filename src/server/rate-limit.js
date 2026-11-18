@@ -10,16 +10,7 @@ const DAY = 86400;
 
 // Process-local fallback is suitable for local use. Configure Redis for shared
 // limits across serverless instances; this is not a provider billing hard cap.
-export function consumeMemoryLimit(
-  key,
-  limit,
-  windowSeconds,
-  now = Date.now(),
-) {
-  consumeMemoryLimits([[key, limit, windowSeconds]], now);
-}
-
-export function consumeMemoryLimits(rules, now = Date.now()) {
+function consumeMemoryLimits(rules, now = Date.now()) {
   if (counters.size > 5000) {
     for (const [id, entry] of counters)
       if (entry.expires <= now) counters.delete(id);
@@ -53,7 +44,7 @@ export function consumeMemoryLimits(rules, now = Date.now()) {
   }
 }
 
-export const SHARED_LIMIT_SCRIPT = `
+const SHARED_LIMIT_SCRIPT = `
 for i, key in ipairs(KEYS) do
   local count = tonumber(redis.call('GET', key) or '0')
   if count >= tonumber(ARGV[i * 2 - 1]) then
@@ -67,7 +58,7 @@ end
 return {1, 0, 0}
 `;
 
-export async function consumeSharedLimits(rules) {
+async function consumeSharedLimits(rules) {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url && !token) {

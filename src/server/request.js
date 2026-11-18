@@ -4,7 +4,7 @@ import { getApiKey } from "./config.js";
 import { AppError, publicError } from "./errors.js";
 import { checkRateLimit } from "./rate-limit.js";
 
-export function assertSameOrigin(request) {
+function assertSameOrigin(request) {
   const origin = request.headers.get("origin");
   const fetchSite = request.headers.get("sec-fetch-site");
   if (fetchSite === "cross-site")
@@ -53,7 +53,7 @@ export function assertSameOrigin(request) {
     );
 }
 
-export async function readJson(request, maxBytes = 32768) {
+async function readJson(request, maxBytes = 32768) {
   if (
     !request.headers
       .get("content-type")
@@ -158,7 +158,10 @@ function sessionFor(request) {
   return { id, cookies: updates };
 }
 
-export async function handleApi(request, { schema, kind, maxBytes, handler }) {
+export async function handleApi(
+  request,
+  { schema, kind, maxBytes, handler, timeoutMs = 85_000 },
+) {
   const requestId = randomUUID();
   const headers = new Headers({
     "Cache-Control": "no-store",
@@ -178,7 +181,7 @@ export async function handleApi(request, { schema, kind, maxBytes, handler }) {
     for (const cookie of session.cookies) headers.append("Set-Cookie", cookie);
     await checkRateLimit(request, kind, session.id);
     const result = await handler(parsed.data, {
-      signal: AbortSignal.any([request.signal, AbortSignal.timeout(85_000)]),
+      signal: AbortSignal.any([request.signal, AbortSignal.timeout(timeoutMs)]),
     });
     // Streaming handlers return their own Response. Preserve its SSE body and
     // content type while applying the same session and request protections.

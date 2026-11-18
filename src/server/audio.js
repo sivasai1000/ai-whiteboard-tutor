@@ -45,7 +45,7 @@ export function narrationSimilarity(expected, actual) {
 }
 
 /** Trim only near-silent edges; keep a small breath around each spoken phrase. */
-export function trimPcm(pcm, sampleRate = 24000) {
+function trimPcm(pcm, sampleRate = 24000) {
   const count = pcm.length / 2;
   let first = 0,
     last = count - 1;

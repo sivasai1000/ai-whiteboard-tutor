@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, GraduationCap } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { InputGroupButton } from "@/components/ui/input-group";
 import {
   DropdownMenu,
@@ -14,8 +14,6 @@ import { reasoningEfforts } from "@/lib/model-settings";
 import { ModelSelector } from "./ModelSelector";
 import { modelControlStyles as s } from "./style";
 
-// AI Elements Model Selector pattern: independent model and effort radio menus.
-// https://ui.shadcn.com/docs/ai-elements/radix/model-selector
 export function ModelControls({
   model,
   effort,
@@ -32,55 +30,62 @@ export function ModelControls({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <InputGroupButton
-            className={s.trigger}
+            className={s.settingsTrigger}
             disabled={disabled}
-            aria-label={`Reasoning effort: ${currentEffort.label}`}
+            aria-label={`Learning settings: ${currentEffort.label} effort${level ? `, ${level}` : ""}`}
+            title="Effort and learning settings"
           >
-            <span className="text-muted-foreground">Effort</span>{" "}
-            {currentEffort.label} <ChevronDown />
+            <SlidersHorizontal />
+            <span className="hidden sm:inline">
+              {currentEffort.label} effort
+            </span>
           </InputGroupButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className={s.menu}>
-          <DropdownMenuLabel>Reasoning effort</DropdownMenuLabel>
+        <DropdownMenuContent
+          side="top"
+          align="start"
+          collisionPadding={12}
+          className={s.menu}
+        >
+          <DropdownMenuLabel className={s.settingsLabel}>
+            Reasoning effort
+          </DropdownMenuLabel>
           <DropdownMenuRadioGroup value={effort} onValueChange={onEffortChange}>
             {reasoningEfforts.map((item) => (
               <DropdownMenuRadioItem
                 key={item.id}
                 value={item.id}
-                className={s.item}
+                className={s.settingsItem}
               >
-                <div>
-                  <p>{item.label}</p>
-                  <p className={s.description}>{item.description}</p>
-                </div>
+                <span className={s.effortLabel}>{item.label}</span>
+                <span className={s.effortDescription}>{item.description}</span>
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
+          {onLevelChange && (
+            <>
+              <div className={s.divider} role="separator" />
+              <DropdownMenuLabel className={s.settingsLabel}>
+                Lesson level
+              </DropdownMenuLabel>
+              <DropdownMenuRadioGroup
+                value={level}
+                onValueChange={onLevelChange}
+              >
+                {["Beginner", "Intermediate"].map((item) => (
+                  <DropdownMenuRadioItem
+                    key={item}
+                    value={item}
+                    className={s.settingsItem}
+                  >
+                    {item}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
-      {onLevelChange && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <InputGroupButton
-              className={s.trigger}
-              disabled={disabled}
-              aria-label={`Lesson level: ${level}`}
-            >
-              <GraduationCap /> {level} <ChevronDown />
-            </InputGroupButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuLabel>Lesson level</DropdownMenuLabel>
-            <DropdownMenuRadioGroup value={level} onValueChange={onLevelChange}>
-              {["Beginner", "Intermediate"].map((item) => (
-                <DropdownMenuRadioItem key={item} value={item}>
-                  {item}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
     </div>
   );
 }

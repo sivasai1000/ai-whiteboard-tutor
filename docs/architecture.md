@@ -13,9 +13,13 @@ flowchart TD
   User[Topic input] --> Route[POST /api/lessons]
   Route --> Validate[Validate input and check quotas]
   Validate --> LLM[OpenAI structured lesson]
-  LLM --> Structure[Validate diagram structure]
+  LLM --> Compile[Compile one state per node into playback lists]
+  Compile --> Structure[Validate diagram structure]
   Structure --> Review[Bounded narration and diagram consistency review]
-  Review --> Check[Validate reviewed lesson and sign narration]
+  Structure -->|Invalid| Repair[One correction attempt with concrete issues]
+  Review -->|Rejected| Repair
+  Repair -->|Same checks; stop after second attempt| LLM
+  Review -->|Approved| Check[Validate reviewed lesson and sign narration]
   Check --> Browser[Lesson workspace]
   Browser --> Speech[POST /api/speech]
   Speech --> Voice[OpenAI Realtime narration]
@@ -31,11 +35,13 @@ flowchart TD
 
 ## Walk through a lesson
 
-The learner types “How do fractions work?” in `TopicInput.jsx`. The input includes reusable model, effort and teaching-level menus. `WelcomeScreen.jsx` sends the topic, teaching level, configured model and selected effort to `/api/lessons`. The route calls the shared request handler, which checks origin, payload size, schema, configuration and quotas. The service rejects models other than the server's configured model before calling OpenAI; Low effort is the default.
+The learner types “How do fractions work?” in `TopicInput.jsx`. The input shares compact composer styles with AI Chat. A model selector and settings button sit beside the send button; the settings menu contains effort and teaching level. Mobile inputs start at two lines, menus stay within the viewport, and empty screens omit suggestion rows. `WelcomeScreen.jsx` sends the topic, teaching level, configured model and selected effort to `/api/lessons`. The route calls the shared request handler, which checks origin, payload size, schema, configuration and quotas. The service rejects models other than the server's configured model before calling OpenAI; Low effort is the default.
 
-`lesson-service.js` requests a lesson matching `generatedLessonSchema`. The provider returns semantic diagrams and teaching steps. For example, an algorithm uses ordered array nodes; each spoken comparison highlights a node and each elimination dims the discarded values. The seven general diagram layouts have deterministic coordinates, capacity limits, controlled colors and curated symbols. A specialized `moon-phases` layout uses a checked mathematical model, local imagery and an orbital view paired with the view from Earth. No model-generated code is executed.
+`lesson-service.js` requests a plan matching `lessonPlanSchema`: six chapters with three steps each. The provider returns semantic diagrams and one `nodeStates` entry per visible object in each step. `lesson-plan.js` derives the visible/focus/dim arrays, validates that IDs exist and are unique, and checks the resulting `generatedLessonSchema`. This preserves the stored playback format while preventing contradictory visibility lists. For example, an algorithm uses ordered array nodes; each spoken comparison highlights a node and each elimination dims the discarded values. The seven general diagram layouts have deterministic coordinates, capacity limits, controlled colors and curated symbols. A specialized `moon-phases` layout uses a checked mathematical model, local imagery and an orbital view paired with the view from Earth. No model-generated code is executed.
 
-The service checks narration length, unique node IDs, valid connectors, visible/focus/dim references, conflicting states and layout capacity, then calls `lesson-review.js` once. That bounded review can correct factual mistakes in narration when the diagram is already correct, or reject a lesson requiring diagram changes. The revised result must pass validation again before each chapter’s narration is signed. The reviewer uses the same low-cost model and no browsing; it reduces contradictions without guaranteeing factual truth. The browser saves the lesson, then opens `/lesson/[id]`.
+The service checks narration length (230–340 words), unique node IDs, valid connectors, visible/focus/dim references, conflicting states and layout capacity, then calls `lesson-review.js`. That bounded review can correct narration when the diagram is already correct, or return concrete issues requiring diagram changes. The revised result must pass validation again before each chapter’s narration is signed. If either structure or review fails, one correction request includes the previous plan and issues; the corrected plan goes through all checks and an independent review again. A second failure stops. Provider authentication, quota, network errors and cancellation do not trigger this repair. A request uses at most two plans and two reviews within a 170-second deadline.
+
+The reviewer uses the same low-cost model and no browsing; it reduces contradictions without guaranteeing factual truth. Broad educational prompts get a focused introduction; explicitly fictional stories are checked for narrative/diagram consistency. The browser saves a passing lesson, then opens `/lesson/[id]`. Failed generation preserves the user’s topic for a manual retry; it never silently substitutes the sample lesson.
 
 `useLessonPlayer.js` checks for cached audio. Missing chapters are sent to `/api/speech`. The server verifies that the narration matches its signed token before requesting voice generation. The supplied phrases must concatenate to the exact signed text. One Realtime session records those phrases sequentially. Each response is checked for completion and transcript similarity. Near-silent edges are trimmed, a short pause is inserted, and the clips are joined into a WAV with cue boundaries measured from PCM sample counts. The word-alignment adapter transcribes the joined recording once with word timestamps, validates them, and matches them to the original narration using an ordered token alignment constrained by phrase boundaries. It preserves authored wording. The browser checks phrase continuity and word bounds, reads the media duration and caches the recording with both timing levels. A timeout or poor alignment falls back to estimated word positions while retaining the generated voice; cancelled requests remain cancelled.
 

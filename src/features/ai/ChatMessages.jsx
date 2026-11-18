@@ -141,8 +141,8 @@ export function ChatMessages({ messages, busy, status, onRetry }) {
                 role="status"
                 className="flex items-center gap-3 text-xs text-muted-foreground"
               >
-                <BrandMark className="size-5 motion-safe:animate-pulse" /> Braynix
-                is thinking…
+                <BrandMark className="size-5 motion-safe:animate-pulse" />{" "}
+                Braynix is thinking…
               </div>
             )}
           </MessageScrollerContent>

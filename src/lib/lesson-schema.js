@@ -112,6 +112,36 @@ export const generatedLessonSchema = z
   })
   .strict();
 
+// The provider chooses one state per node. The server derives the three playback
+// lists, so a highlighted node can never accidentally be hidden.
+const sceneSchema = generatedLessonSchema.shape.scenes.element;
+const stepSchema = sceneSchema.shape.steps.element;
+export const lessonPlanSchema = generatedLessonSchema.extend({
+  scenes: z
+    .array(
+      sceneSchema.extend({
+        steps: z
+          .array(
+            stepSchema.omit({ visible: true, focus: true, dim: true }).extend({
+              nodeStates: z
+                .array(
+                  z
+                    .object({
+                      id: nodeId,
+                      state: z.enum(["visible", "focus", "dim"]),
+                    })
+                    .strict(),
+                )
+                .min(1)
+                .max(8),
+            }),
+          )
+          .length(3),
+      }),
+    )
+    .length(6),
+});
+
 export const speechRequestSchema = z
   .object({
     text: z.string().min(10).max(800),

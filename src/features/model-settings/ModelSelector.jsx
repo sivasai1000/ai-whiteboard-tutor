@@ -39,11 +39,14 @@ export function ModelSelector({ model, disabled }) {
             disabled={disabled}
             aria-label={`Model: ${modelLabel(model)}`}
           >
-            {modelLabel(model)} <ChevronDown />
+            <span className="max-w-[130px] truncate">{modelLabel(model)}</span>{" "}
+            <ChevronDown />
           </InputGroupButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent
+          side="top"
           align="start"
+          collisionPadding={12}
           className={s.modelMenu}
           onCloseAutoFocus={(event) => {
             if (accessOpen) event.preventDefault();
@@ -56,7 +59,6 @@ export function ModelSelector({ model, disabled }) {
             <DropdownMenuRadioItem value={model} className={s.item}>
               <div className="flex-1">
                 <p className="font-medium">{modelLabel(model)}</p>
-                <p className={s.description}>Available in this workspace</p>
               </div>
               <span className={s.activeBadge}>Active</span>
             </DropdownMenuRadioItem>
@@ -76,7 +78,6 @@ export function ModelSelector({ model, disabled }) {
               <LockKeyhole className={s.lockIcon} aria-hidden="true" />
               <div className="min-w-0 flex-1">
                 <p>{option.label}</p>
-                <p className={s.description}>{option.description}</p>
               </div>
               <span className={s.lockedBadge}>Locked</span>
             </DropdownMenuItem>

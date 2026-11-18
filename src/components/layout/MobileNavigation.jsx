@@ -41,7 +41,7 @@ export function MobileNavigation() {
       </Sheet>
       <Link
         href="/"
-        className="flex items-center gap-2 text-xl font-semibold tracking-tight"
+        className="flex items-center gap-2 text-lg font-semibold tracking-tight"
       >
         <BrandMark className="size-6" />
         Braynix

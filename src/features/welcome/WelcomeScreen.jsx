@@ -9,7 +9,7 @@ import { apiRequest } from "@/lib/api";
 import { createSampleLesson } from "@/lib/sample-lesson";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { TopicInput } from "./TopicInput";
-import { SuggestedTopics } from "./SuggestedTopics";
+import { BrandMark } from "@/components/layout/Brand";
 import { SamplePreview } from "./SamplePreview";
 import { welcomeStyles as s } from "./style";
 
@@ -92,16 +92,12 @@ export function WelcomeScreen({ initialTopic = "", model }) {
         </span>
       </div>
       <section className={s.content} aria-labelledby="welcome-heading">
-        <p className={s.eyebrow}>LEARN SOMETHING NEW</p>
+        <BrandMark className="mb-5 size-8 text-primary sm:size-9" />
         <h1 id="welcome-heading" className={s.heading}>
-          See the idea.
-          <br />
-          <span className="text-primary">Understand the why.</span>
+          Make sense of something new.
         </h1>
         <p className={s.intro}>
-          Turn any topic into a short visual lesson.
-          <br />
-          Drawings and voice, teaching together at your pace.
+          Your topic, explained with drawings and voice.
         </p>
         <TopicInput
           topic={topic}
@@ -137,8 +133,8 @@ export function WelcomeScreen({ initialTopic = "", model }) {
             className="mt-4 flex items-center gap-2 text-xs text-muted-foreground"
           >
             <Sparkles className="size-3.5 text-primary" />
-            Creating your explanation and visual teaching steps. This may take a
-            moment.
+            Writing and checking your lesson. Most lessons take about a minute;
+            a correction can take a little longer.
           </p>
         )}
         {error && (
@@ -146,13 +142,6 @@ export function WelcomeScreen({ initialTopic = "", model }) {
             <ErrorState message={error} />
           </div>
         )}
-        <SuggestedTopics
-          disabled={pending || previewBusy}
-          onSelect={(value) => {
-            setTopic(value);
-            document.getElementById("lesson-topic")?.focus();
-          }}
-        />
         <SamplePreview
           onOpen={openSample}
           onPrepare={prepareSample}

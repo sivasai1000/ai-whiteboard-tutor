@@ -54,8 +54,7 @@ export function SamplePreview({ onOpen, onPrepare, opening, disabled }) {
       </span>
       <span className={s.content}>
         <span className={s.eyebrow}>
-          TRY A SAMPLE LESSON{" "}
-          <span className="text-muted-foreground/50">/</span> ~2 MIN
+          Sample lesson <span aria-hidden="true">·</span> 2 min
         </span>
         <span className={s.title}>{sampleTopic}</span>
         <span className={s.description}>{sampleDescription}</span>

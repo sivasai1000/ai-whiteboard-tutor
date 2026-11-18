@@ -10,7 +10,7 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { MAX_CHAT_INPUT } from "@/lib/conversation-schema";
-import { aiStyles as s } from "./style";
+import { composerStyles as s } from "@/components/composer/style";
 
 export function ChatComposer({
   value,
@@ -33,7 +33,7 @@ export function ChatComposer({
         if (!busy && !disabled && value.trim()) onSend(value.trim());
       }}
     >
-      <InputGroup className={s.composer}>
+      <InputGroup className={s.shell}>
         <label htmlFor="ai-chat-input" className="sr-only">
           Message Braynix
         </label>
@@ -41,7 +41,8 @@ export function ChatComposer({
           id="ai-chat-input"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder="Ask a question, explore an idea…"
+          placeholder="Message Braynix…"
+          rows={2}
           maxLength={MAX_CHAT_INPUT}
           disabled={disabled || preparing}
           className={s.textarea}
@@ -65,15 +66,15 @@ export function ChatComposer({
             }
           }}
         />
-        <InputGroupAddon align="block-end" className={s.composerFooter}>
+        <InputGroupAddon align="block-end" className={s.footer}>
           <ModelControls
             model={model}
             effort={effort}
             onEffortChange={onEffortChange}
             disabled={busy || disabled}
           />
-          <div className="ml-auto flex items-center gap-3">
-            <span className={s.composerHint}>
+          <div className={s.actions}>
+            <span className={s.hint}>
               {value.length > 3500
                 ? `${value.length} / ${MAX_CHAT_INPUT}`
                 : "Shift + Enter for a new line"}
@@ -82,7 +83,7 @@ export function ChatComposer({
               type={busy ? "button" : "submit"}
               variant="default"
               size="icon-sm"
-              className="size-11 rounded-xl"
+              className={s.iconSend}
               disabled={preparing || (!busy && (disabled || !value.trim()))}
               onClick={busy ? onStop : undefined}
               aria-label={

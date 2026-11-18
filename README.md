@@ -4,6 +4,8 @@ A focused learning space: enter a topic, generate a short lesson, and listen whi
 
 **Live demo:** [ai-whiteboard-tutor-amber.vercel.app](https://ai-whiteboard-tutor-amber.vercel.app) · **Source:** [sivasai1000/ai-whiteboard-tutor](https://github.com/sivasai1000/ai-whiteboard-tutor)
 
+Brand assets are copied unchanged from [Braynix Studios](https://braynix.in/): the [192px brand mark](https://braynix.in/android-chrome-192x192.png), [favicon](https://braynix.in/favicon.ico), [32px icon](https://braynix.in/favicon-32x32.png), and [Apple touch icon](https://braynix.in/apple-touch-icon.png). They are served locally; rendering the app does not depend on the company website.
+
 ## Run locally
 
 Prerequisites: Node.js 24.x, npm, and an OpenAI API account with credits and access to the configured models.
@@ -35,7 +37,7 @@ Open **http://127.0.0.1:3000**. New AI lessons and follow-up answers require the
 - Real Server-Sent Events (SSE) using the Vercel AI SDK; answers appear incrementally as they are generated.
 - Explore topics, lesson history, bookmarks and confirmed deletion.
 - Local persistence of lesson data, chat and narration in IndexedDB.
-- Responsive light slate UI using Tailwind CSS, feature-level `style.js` files and shadcn/ui.
+- Responsive neutral UI with compact mobile composers using Tailwind CSS, feature-level `style.js` files and shadcn/ui.
 - Loading, error and retry states; keyboard controls and accessible input labels.
 
 ## Stack
@@ -75,6 +77,7 @@ src/
   components/
     ui/                      shadcn/ui building blocks
     layout/                  Shared sidebar, shell and mobile navigation
+    composer/                Shared responsive input styles
     shared/                  Reusable loading/error/empty-state UI
   features/
     welcome/                 Topic input and discovery
@@ -92,8 +95,8 @@ Pages compose feature components. Components render the interface. Hooks own bro
 
 ## How synchronization works
 
-1. The AI returns six chapters, each with a semantic diagram and three to five short teaching steps. Each step contains the spoken phrase, a visual note, visible/highlighted/dimmed node IDs and any label or value changes.
-2. The backend validates node references, layout capacity, narration length and conflicting states. A second bounded call checks factual and narration/diagram consistency; it can correct narration when the diagram is already correct, or reject a lesson needing larger changes. The result is validated again before signing each chapter’s joined narration. React chooses the coordinates; the model never writes executable graphics.
+1. The AI plans six chapters with exactly three short teaching steps each, targeting 270–310 spoken words. Each step contains narration, a visual note, label/value updates and one state per visible object. `lesson-plan.js` compiles those states into the existing visible/highlighted/dimmed playback lists; a highlighted object cannot accidentally be hidden. Older saved lessons with up to five steps per chapter remain supported.
+2. The backend validates node references, layout capacity, narration length and simulation constraints. An independent bounded call checks factual and narration/diagram consistency; it can correct narration when the diagram is already correct. If structure or review fails, the service requests one corrected plan with concrete feedback, then validates and reviews it again. A second invalid attempt returns an error. Only a passing result receives signed narration. React chooses the coordinates; the model never writes executable graphics.
 3. The browser requests missing audio chapters, at most two concurrently. The server checks that the phrases concatenate to the signed passage before opening a Realtime voice session.
 4. Each phrase is recorded separately in that session. The server checks its transcript, trims near-silent edges, adds a short pause, and joins the PCM clips into a WAV. Sample counts provide **measured start/end times for each phrase**.
 5. A bounded transcription call obtains word timestamps for the finished chapter. The server aligns those positions with the authored text, preserving its spelling and punctuation. The browser validates and caches the audio, phrase cues and word timings.
@@ -115,7 +118,7 @@ Captions and controls remain inside the whiteboard in normal and fullscreen mode
 
 Previously saved lessons retain their original primitive diagrams and estimated timing. Create a new lesson to use the new visual format. Old cached audio is never assigned invented phrase timings.
 
-The lesson input uses the [AI Elements Model Selector pattern](https://ui.shadcn.com/docs/ai-elements/radix/model-selector) with shadcn Input Group and radio menus. It displays the server-configured model and offers Low, Medium or High reasoning effort. Low is the default. The selected effort reaches the OpenAI Responses request and is stored with the generated lesson. Only the configured model is allowed; changing the client request cannot select an unapproved model. The shared model menu also shows locked alternatives. Choosing a locked row opens a contact dialog for Sivasai at `sivasaimallipudi9h@gmail.com`; it does not select that model or send a provider request. The email action opens the user’s mail app with the requested model named in the draft. Higher effort may increase latency and cost, while the output-token limit remains bounded.
+The lesson input uses the [AI Elements Model Selector pattern](https://ui.shadcn.com/docs/ai-elements/radix/model-selector) with shadcn Input Group and radio menus. It displays the server-configured model beside a compact settings menu containing Low, Medium or High reasoning effort and the lesson level. On mobile, the two-line input and one-row toolbar fit a 320px viewport; settings use an icon button and menus stay within the viewport. Low is the default. The selected effort reaches the OpenAI Responses request and is stored with the generated lesson. Only the configured model is allowed; changing the client request cannot select an unapproved model. The shared model menu also shows locked alternatives. Choosing a locked row opens a contact dialog for Sivasai at `sivasaimallipudi9h@gmail.com`; it does not select that model or send a provider request. The email action opens the user’s mail app with the requested model named in the draft. Higher effort may increase latency and cost, while the output-token limit remains bounded.
 
 See [architecture.md](docs/architecture.md) for the full flow and implementation walkthrough.
 
@@ -172,7 +175,8 @@ Never commit `.env.local` or any real key. Credentials are never sent to the bro
 
 ## Cost controls and public-demo limits
 
-- Each lesson uses one bounded generation call and one bounded accuracy review with the configured low-cost text model. Shared diagrams are deduplicated in the review input. This adds latency and API usage; it is not a free or externally sourced fact-check. Automatic SDK retries are disabled.
+- A valid first attempt uses one generation call and one accuracy review with the configured low-cost text model. An invalid plan or rejected review allows one correction attempt: at most two generation calls and two reviews per request. Shared diagrams are deduplicated in review input. This adds latency and API usage; it is not a free or externally sourced fact-check. Automatic SDK transport retries remain disabled; billing, authentication, network and cancellation errors are not retried.
+- Lesson planning and repair share a 170-second deadline inside a 180-second route limit. Each provider request retains its 75-second timeout. Other JSON API handlers keep their existing 85-second deadline. Cancelling the browser request cancels work on the server.
 - A small model is used for lesson data and chat; narration is generated once and cached.
 - The browser caches each completed audio chapter, including before a later chapter fails.
 - Replaying, seeking and restarting do not generate new AI content.

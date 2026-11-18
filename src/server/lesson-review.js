@@ -2,11 +2,13 @@ import "server-only";
 import { MOON_SCENE_CONTRACT } from "../lib/moon-scene.js";
 import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod";
+import { LessonQualityError } from "./lesson-quality.js";
 import { AppError } from "./errors.js";
 
 const reviewSchema = z
   .object({
     approved: z.boolean(),
+    issues: z.array(z.string().min(1).max(220)).max(6),
     corrections: z
       .array(
         z
@@ -26,9 +28,10 @@ Pay special attention to equations: inputs and outputs, energy direction, signs,
 ${MOON_SCENE_CONTRACT}
 For a simulation, check the starting phase and every transition end value against speech, including held states. Do not approve a static named phase at the wrong value or speech that implies a moving transition has already finished.
 The input provides unique diagrams and chapters referencing them. Each chapter's steps have narration, note, visible/focus/dim node IDs and updates. Indices in corrections are ZERO-BASED. Correct factual mistakes or mismatches in narration ONLY when the diagram, visual note and visual state are already correct. Do not rewrite correct content for style. Preserve the original teaching point and approximately the same length. Speak equations and numbers naturally. Each corrected narration is at most 180 characters.
-Return approved=true when the lesson is coherent as-is or after your corrections. Return approved=false if a diagram, visual state or essential teaching claim cannot be fixed with those limited narration corrections, or if the subject is beyond your confidence. Return an empty corrections array when no changes are needed. Do not approve an equation with energy or material on the wrong side.`;
+For an explicitly fictional story, assess narrative and visual consistency instead of treating fictional events as factual errors. Ensure the story is labeled as fictional.
+Return approved=true when the lesson is coherent as-is or after your corrections, with issues=[]. Return approved=false if a diagram, visual state or essential teaching claim cannot be fixed with those limited narration corrections, or if the subject is beyond your confidence. In that case give concrete, chapter-specific issues so a new plan can fix them; never simply say to use a more specific topic. Return an empty corrections array when no changes are needed. Do not approve an equation with energy or material on the wrong side.`;
 
-/** One bounded review, never a retry loop. Shared diagrams are sent only once. */
+/** Review every structurally valid attempt. Only the service controls repair. */
 export async function reviewLesson(content, client, model, signal) {
   const diagrams = [];
   const keys = new Map();
@@ -57,25 +60,38 @@ export async function reviewLesson(content, client, model, signal) {
     },
     { signal },
   );
-  if (response.status !== "completed" || !response.output_parsed?.approved) {
+  if (
+    response.output?.some((item) =>
+      item.content?.some((part) => part.type === "refusal"),
+    )
+  )
     throw new AppError(
-      "LESSON_QUALITY",
-      "The lesson didn't pass its accuracy review. Please try a more specific topic.",
-      502,
+      "TOPIC_UNSUPPORTED",
+      "The tutor can’t teach that request. Try a different educational topic.",
+      422,
     );
-  }
+  if (response.status !== "completed" || !response.output_parsed)
+    throw new LessonQualityError([
+      "The accuracy review was incomplete. Simplify the explanation and keep claims well established.",
+    ]);
   const review = reviewSchema.parse(response.output_parsed);
+  if (!review.approved || review.issues.length)
+    throw new LessonQualityError(
+      review.issues.length
+        ? review.issues
+        : [
+            "The accuracy review could not verify the explanation. Use a simpler, coherent example.",
+          ],
+    );
   const revised = structuredClone(content);
   const edited = new Set();
   for (const correction of review.corrections) {
     const step = revised.scenes[correction.chapter]?.steps[correction.step];
     const key = `${correction.chapter}:${correction.step}`;
     if (!step || edited.has(key)) {
-      throw new AppError(
-        "LESSON_QUALITY",
-        "The lesson review was incomplete. Please try again.",
-        502,
-      );
+      throw new LessonQualityError([
+        "The accuracy review returned an invalid correction target. Keep exactly six chapters and three steps per chapter.",
+      ]);
     }
     edited.add(key);
     step.narration = correction.narration;

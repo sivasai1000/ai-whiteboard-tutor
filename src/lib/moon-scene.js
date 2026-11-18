@@ -1,6 +1,6 @@
 /** A bounded, reproducible teaching model. Phase is cycles relative to sunlight. */
 export const MOON_LAYOUT = "moon-phases";
-export const MOON_NODE_LABELS = {
+const MOON_NODE_LABELS = {
   sun: "Sun",
   earth: "Earth",
   moon: "Moon",
@@ -9,7 +9,7 @@ export const MOON_NODE_LABELS = {
 export const MOON_NODE_IDS = Object.keys(MOON_NODE_LABELS);
 const TAU = Math.PI * 2;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-export const phaseFraction = (cycles) => ((cycles % 1) + 1) % 1;
+const phaseFraction = (cycles) => ((cycles % 1) + 1) % 1;
 
 export function moonGeometry(cycles) {
   const phase = phaseFraction(cycles);

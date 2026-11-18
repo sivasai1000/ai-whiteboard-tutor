@@ -1,4 +1,4 @@
-import { Bookmark, MessageSquare, Plus, Trash2, Monitor } from "lucide-react";
+import { Bookmark, MessageSquare, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +23,7 @@ export function ChatHeader({
   bookmarkPending,
 }) {
   return (
-    <header className={s.header}>
+    <header className={cn(s.header, !hasMessages && "hidden lg:flex")}>
       <div className="flex min-w-0 items-center gap-3">
         <MessageSquare className="size-4 shrink-0 text-primary" />
         <div className="min-w-0">
@@ -34,12 +34,6 @@ export function ChatHeader({
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        {!hasMessages && (
-          <span className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
-            <Monitor className="size-3.5" />
-            Personal workspace
-          </span>
-        )}
         {hasMessages && (
           <Button
             size="icon"
