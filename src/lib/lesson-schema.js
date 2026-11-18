@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { VISUAL_SYMBOLS } from "./visual-symbols.js";
 
 export const lessonRequestSchema = z
   .object({
@@ -22,24 +23,7 @@ const visualNodeSchema = z
     detail: z.string().max(55),
     value: z.number().min(0).max(1e12),
     color: z.enum(["indigo", "teal", "amber", "rose"]),
-    symbol: z.enum([
-      "none",
-      "sun",
-      "water",
-      "cloud",
-      "rain",
-      "leaf",
-      "earth",
-      "atom",
-      "brain",
-      "chip",
-      "battery",
-      "light",
-      "gear",
-      "server",
-      "person",
-      "database",
-    ]),
+    symbol: z.enum(VISUAL_SYMBOLS),
   })
   .strict();
 

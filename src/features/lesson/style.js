@@ -34,14 +34,17 @@ export const lessonStyles = {
     "h-11 w-11 rounded-lg px-0 font-mono text-[11px] tabular-nums text-slate-500 hover:bg-slate-100 sm:h-8",
   fullscreenButton: "ml-1 border-l border-slate-200 pl-1",
   boardViewport:
-    "relative flex min-h-[260px] flex-1 items-center overflow-auto overscroll-contain bg-[radial-gradient(circle,#dfe5ef_0.8px,transparent_0.8px)] [background-size:24px_24px] px-3 py-5 sm:px-7 sm:py-6",
+    "relative flex min-h-[260px] flex-1 items-start overflow-auto overscroll-contain bg-[radial-gradient(circle,#dfe5ef_0.8px,transparent_0.8px)] [background-size:24px_24px] px-3 py-4 sm:px-7 sm:py-5",
   simulationViewport: "bg-[#0b1222] bg-none px-0 py-0 sm:px-0 sm:py-0",
-  diagramFrame: "mx-auto shrink-0",
+  diagramFrame: "m-auto shrink-0",
   diagramFrameFit: "max-w-[1040px]",
   board: "h-full w-full min-w-0 select-none",
   diagramFit: "lg:max-h-[calc(100dvh-360px)] lg:min-h-[240px]",
   diagramFullscreen: "max-h-[calc(100dvh-270px)] min-h-[240px]",
   mediaOverlay: "relative z-20 flex w-full shrink-0 flex-col bg-white",
+  visualTakeaway:
+    "flex shrink-0 items-center justify-center gap-2 border-t border-indigo-100/70 bg-indigo-50/45 px-4 py-3 text-center text-xs font-medium leading-relaxed text-indigo-800 sm:text-sm",
+  preparationStatus: "pb-1 text-[11px] leading-relaxed text-slate-500",
   caption:
     "flex min-h-16 w-full items-center justify-center px-5 pb-4 pt-2 text-center sm:px-10",
   subtitleStack: "grid w-full place-items-center",

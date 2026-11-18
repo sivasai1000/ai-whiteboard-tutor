@@ -103,8 +103,9 @@ function ActiveLesson({ lesson }) {
                 size="sm"
                 className="mt-3 text-foreground"
                 onClick={player.retry}
+                disabled={player.retryDisabled}
               >
-                Reload narration
+                {player.retryLabel}
               </Button>
             </div>
           )}
@@ -123,7 +124,7 @@ function ActiveLesson({ lesson }) {
                   narration={state.scene.narration}
                   duration={state.duration}
                   time={state.localTime}
-                  loading={player.loading}
+                  loading={player.loading || (player.buffering && !state.cue)}
                   measuredCue={state.cue}
                 />
                 <LessonPlayer player={player} />
@@ -141,9 +142,8 @@ function ActiveLesson({ lesson }) {
                       : "Giving your lesson a voice"}
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Preparing chapter{" "}
-                    {Math.min(player.loadedCount + 1, lesson.scenes.length)} of{" "}
-                    {lesson.scenes.length}. This can take a moment.
+                    Preparing the opening chapter. You can start listening while
+                    the rest of your lesson loads.
                   </p>
                 </div>
                 <LoaderCircle className="size-4 animate-spin text-primary" />

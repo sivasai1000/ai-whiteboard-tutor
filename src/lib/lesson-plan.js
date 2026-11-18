@@ -4,6 +4,7 @@ import {
   wordCount,
 } from "./lesson-schema.js";
 import { checkVisualLesson } from "./visual-lesson.js";
+import { resolveVisualSymbol } from "./visual-symbols.js";
 
 /** Compile a provider plan into the existing, seekable playback format. */
 export function compileLessonPlan(value) {
@@ -23,6 +24,13 @@ export function compileLessonPlan(value) {
       const ids = new Set(scene.visual.nodes.map((node) => node.id));
       return {
         ...scene,
+        visual: {
+          ...scene.visual,
+          nodes: scene.visual.nodes.map((node) => ({
+            ...node,
+            symbol: resolveVisualSymbol(node),
+          })),
+        },
         steps: scene.steps.map(({ nodeStates, ...step }, index) => {
           const seen = new Set();
           for (const node of nodeStates) {

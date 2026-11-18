@@ -21,10 +21,10 @@ New lessons, narration and chat use the server's configured OpenAI account. The 
 | Area | What is implemented |
 | --- | --- |
 | Lesson generation | Topic-first input, Beginner/Intermediate levels, six chapters and 18 teaching steps targeting about two minutes |
-| Whiteboard | Arrays, flows, cycles, comparisons, bars, concept maps and equation steps, with labels, arrows and synchronized highlights |
+| Whiteboard | Arrays, flows, cycles, comparisons, bars, concept maps and equation steps, with curated animal/nature illustrations, labels, arrows and synchronized highlights |
 | Moon visualization | A calculated Moon-phases scene with local Earth/Moon imagery, an orbital view and a corresponding view from Earth |
 | Narration and captions | Generated voice, measured phrase timings and progressively revealed subtitle words |
-| Playback | Play, pause/resume, seek, restart, speed control, zoom and fullscreen with an expanded-view fallback |
+| Playback | First-chapter playback while later narration prepares; play, pause/resume, seek, restart, speed control, zoom and fullscreen with an expanded-view fallback |
 | Tutor follow-ups | Questions answered with the current lesson as context |
 | AI Chat | Real SSE streaming, Markdown/code rendering, copy, stop, retry and regenerate |
 | Personal library | Separate chat and lesson history, bookmarks and deletion confirmation; chat history is searchable |
@@ -91,12 +91,12 @@ flowchart LR
 2. **Check:** the backend validates structure, node references, diagram capacity and narration length. A separate model call reviews factual and narration/diagram consistency. An invalid result gets one correction attempt with concrete feedback, followed by the same checks. A second failure returns an error instead of substituting the sample.
 3. **Record:** approved narration is signed. The voice service verifies the signature, records each teaching phrase, checks transcript similarity and joins the clips into chapter audio. PCM sample counts provide measured phrase boundaries.
 4. **Align:** one transcription request per new chapter obtains word timestamps, which are matched to the authored narration. If alignment fails, playback retains the recording and uses word timings marked as estimated.
-5. **Play:** the audio element's `currentTime` selects the drawing state and visible caption words. Captions build progressively: “The” → “The Moon” → “The Moon reflects”. Pause, seek, restart and speed changes all use this clock.
-6. **Reuse:** completed audio and timing metadata are cached in IndexedDB. Replaying a fully cached lesson does not generate new narration.
+5. **Play:** playback becomes available when the first chapter is ready. Two workers prepare the remaining AI narration in the background. The audio element's `currentTime` selects the drawing state and visible caption words. Captions build progressively: “The” → “The Moon” → “The Moon reflects”. Pause, seek, restart and speed changes all use this clock. Seeking to an unfinished chapter waits for that recording; the total duration remains approximate until every chapter is measured.
+6. **Reuse and recover:** completed audio and timing metadata are cached in IndexedDB. Cached recordings are checked for readable media and valid phrase boundaries before reuse. An unreadable chapter is replaced individually; other recordings are retained. Audio-output failures offer a playback retry without requesting new narration.
 
 Whiteboard changes follow measured phrase boundaries; captions follow word timestamps when available. Seeking rebuilds the board from lesson data, so jumping backward restores earlier labels and highlights. Timestamp estimates and the model review improve consistency but do not guarantee exact phonetic timing or factual correctness.
 
-For the Moon scene, code calculates the orbit and illuminated shape from a shared phase value. Other topics use the seven general diagram layouts. See the [architecture walkthrough](docs/architecture.md) and [astronomy model, sources and asset credits](docs/astronomy.md).
+For the Moon scene, code calculates the orbit and illuminated shape from a shared phase value. Other topics use the seven general diagram layouts with a shared symbol vocabulary. Recognized subjects such as lions, lionesses, zebras, grass, the Sun and Earth use local illustrations; arbitrary generated images or code are not accepted. Concept and flow layouts arrange the objects visible at the current teaching step. See the [architecture walkthrough](docs/architecture.md) and [astronomy model, sources and asset credits](docs/astronomy.md).
 
 ## Project structure
 

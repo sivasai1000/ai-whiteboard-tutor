@@ -305,6 +305,16 @@ export function Whiteboard({
           </svg>
         )}
       </div>
+      {scene.visual &&
+        scene.visual.layout !== MOON_LAYOUT &&
+        scene.steps?.[stepIndex]?.note && (
+          <div
+            className={s.visualTakeaway}
+            aria-label="Current visual takeaway"
+          >
+            {scene.steps[stepIndex].note}
+          </div>
+        )}
       {children}
     </div>
   );

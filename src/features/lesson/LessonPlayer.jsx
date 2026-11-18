@@ -1,6 +1,6 @@
 "use client";
 
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { Pause, Play, RotateCcw, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { formatTime } from "@/lib/utils";
@@ -24,6 +24,12 @@ export function LessonPlayer({ player }) {
             <Play className="ml-0.5 size-4 fill-current" />
           )}
         </Button>
+        {player.buffering && (
+          <LoaderCircle
+            className="size-3.5 animate-spin text-primary"
+            aria-label="Waiting for narration"
+          />
+        )}
         <Button
           variant="ghost"
           size="icon"
@@ -37,6 +43,7 @@ export function LessonPlayer({ player }) {
         </Button>
         <span className={s.mediaTime} data-testid="playback-time">
           {formatTime(player.time)} <span className="text-slate-300">/</span>{" "}
+          {player.loadedCount < player.chapterCount ? "~" : ""}
           {formatTime(player.total)}
         </span>
         <Button
@@ -54,6 +61,13 @@ export function LessonPlayer({ player }) {
           {player.speed}×
         </Button>
       </div>
+      {(player.preparing || player.buffering) && (
+        <p className={s.preparationStatus} role="status">
+          {player.buffering
+            ? `Preparing chapter ${player.state.index + 1}…`
+            : `${player.loadedCount} of ${player.chapterCount} chapters ready${player.ready ? " · You can start listening" : ""}`}
+        </p>
+      )}
       <Slider
         className={s.mediaTimeline}
         value={[player.time]}

@@ -2,97 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLessons } from "@/features/library/LessonProvider";
-import { apiRequest } from "@/lib/api";
-import {
-  WORD_TIMING_VERSION,
-  validWordTimings,
-  estimateWordTimings,
-} from "@/lib/word-timing";
+import { loadChapterAudio } from "./audio-loader";
 import { buildTimeline, resolvePlayback } from "./timeline";
-
-function audioFromBase64(base64, mimeType) {
-  const bytes = Uint8Array.from(atob(base64), (character) =>
-    character.charCodeAt(0),
-  );
-  return new Blob([bytes], { type: mimeType });
-}
-
-function measureAudio(blob, signal) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob);
-    const media = new Audio();
-    const cleanup = () => {
-      URL.revokeObjectURL(url);
-      media.removeAttribute("src");
-      signal.removeEventListener("abort", onAbort);
-      clearTimeout(timer);
-    };
-    const onAbort = () => {
-      cleanup();
-      reject(new DOMException("Aborted", "AbortError"));
-    };
-    const timer = setTimeout(() => {
-      cleanup();
-      reject(new Error("This audio could not be loaded. Please try again."));
-    }, 15000);
-    media.onloadedmetadata = () => {
-      const duration = media.duration;
-      cleanup();
-      if (!Number.isFinite(duration) || duration <= 0)
-        reject(new Error("The narration has an invalid duration."));
-      else resolve(duration);
-    };
-    media.onerror = () => {
-      cleanup();
-      reject(new Error("This browser could not read the narration audio."));
-    };
-    signal.addEventListener("abort", onAbort, { once: true });
-    media.preload = "metadata";
-    media.src = url;
-    if (signal.aborted) onAbort();
-  });
-}
-
-async function loadSampleAudio(scene, signal) {
-  const urls = [scene.sampleAudioUrl];
-  // Keep the original WAV as a fallback for browsers without AAC playback.
-  if (scene.sampleAudioUrl.endsWith(".m4a"))
-    urls.push(scene.sampleAudioUrl.replace(/\.m4a$/, ".wav"));
-  let failure;
-  for (const url of urls) {
-    try {
-      const response = await fetch(url, { signal });
-      if (!response.ok)
-        throw new Error(
-          "The sample narration is unavailable. Please reload the page.",
-        );
-      const blob = await response.blob();
-      return { blob, duration: await measureAudio(blob, signal) };
-    } catch (error) {
-      signal.throwIfAborted();
-      failure = error;
-    }
-  }
-  throw failure;
-}
-
-function validCues(recording, steps) {
-  const cues = recording?.cues;
-  return (
-    Array.isArray(cues) &&
-    cues.length === steps.length &&
-    cues.every(
-      (cue, i) =>
-        Number.isFinite(cue.start) &&
-        Number.isFinite(cue.end) &&
-        cue.start >= 0 &&
-        cue.end > cue.start &&
-        (i ? Math.abs(cue.start - cues[i - 1].end) < 0.05 : cue.start < 0.05) &&
-        cue.text === steps[i].narration,
-    ) &&
-    Math.abs(cues.at(-1).end - recording.duration) < 0.5
-  );
-}
 
 export function useLessonPlayer(lesson) {
   const { getAudio, saveAudio } = useLessons();
@@ -102,8 +13,10 @@ export function useLessonPlayer(lesson) {
   const [timings, setTimings] = useState({});
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [preparing, setPreparing] = useState(true);
+  const [buffering, setBuffering] = useState(false);
   const [loadedCount, setLoadedCount] = useState(0);
+  const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const [speed, setSpeedState] = useState(initialSpeed);
   const [attempt, setAttempt] = useState(0);
@@ -115,8 +28,13 @@ export function useLessonPlayer(lesson) {
   const speedRef = useRef(initialSpeed);
   const seekingRef = useRef(false);
   const positionRef = useRef(0);
+  const localPositionRef = useRef(0);
   const switchRef = useRef(null);
   const operationRef = useRef(0);
+  const invalidAudioRef = useRef(new Set());
+  const resumeRef = useRef(null);
+  const playbackOnlyRef = useRef(false);
+  const failuresRef = useRef(new Map());
 
   const timeline = useMemo(
     () => buildTimeline(lesson.scenes, durations, timings),
@@ -129,26 +47,46 @@ export function useLessonPlayer(lesson) {
     playingRef.current = false;
     audioRef.current?.pause();
     setPlaying(false);
+    setBuffering(false);
   }, []);
 
   const switchTrack = useCallback((index, localTime, shouldPlay) => {
     const audio = audioRef.current;
-    const track = tracksRef.current[index];
-    if (!audio || !track) return;
+    if (!audio) return;
     const operation = ++operationRef.current;
+    audio.onloadedmetadata = null;
     audio.pause();
     indexRef.current = index;
+    localPositionRef.current = localTime;
     playingRef.current = shouldPlay;
     setPlaying(shouldPlay);
+    const track = tracksRef.current[index];
+    seekingRef.current = true;
+    if (!track) {
+      const failure = failuresRef.current.get(index);
+      setBuffering(!failure);
+      if (failure) {
+        playingRef.current = false;
+        setPlaying(false);
+        setError(failure);
+      }
+      return; // The loader resumes this exact chapter when it becomes available.
+    }
     const startPlayback = () => {
       if (operation !== operationRef.current) return;
+      audio.onloadedmetadata = null;
       audio.currentTime = Math.max(
         0,
         Math.min(localTime, audio.duration || track.duration),
       );
+      localPositionRef.current = audio.currentTime;
+      positionRef.current =
+        timelineRef.current[index].start + audio.currentTime;
+      setTime(positionRef.current);
       seekingRef.current = false;
       audio.playbackRate = speedRef.current;
-      if (playingRef.current)
+      setBuffering(false);
+      if (playingRef.current) {
         audio.play().catch((failure) => {
           if (
             operation !== operationRef.current ||
@@ -157,16 +95,21 @@ export function useLessonPlayer(lesson) {
             return;
           playingRef.current = false;
           setPlaying(false);
-          setError("Audio playback was interrupted. Press Play to continue.");
+          setBuffering(false);
+          playbackOnlyRef.current = true;
+          setError(
+            failure.name === "NotAllowedError"
+              ? "Your browser paused audio. Press Play to start the narration."
+              : "Audio playback was interrupted. Press Play to continue.",
+          );
         });
-    };
-    if (audio.src !== track.url || audio.readyState < 1) {
-      seekingRef.current = true;
-      audio.onloadedmetadata = startPlayback;
-      if (audio.src !== track.url) {
-        audio.src = track.url;
-        audio.load();
       }
+    };
+    if (audio.src !== track.url || audio.readyState < 1 || audio.error) {
+      setBuffering(shouldPlay);
+      audio.onloadedmetadata = startPlayback;
+      audio.src = track.url;
+      audio.load();
     } else startPlayback();
   }, []);
   switchRef.current = switchTrack;
@@ -179,24 +122,37 @@ export function useLessonPlayer(lesson) {
     media.preservesPitch = true;
     audioRef.current = media;
     const objectUrls = [];
+    const sceneDurations = {};
+    const sceneTimings = {};
+    const resume = resumeRef.current;
+    resumeRef.current = null;
     let frame;
-    let failed = false;
-    setLoading(true);
+    setPreparing(true);
+    setBuffering(false);
     setLoadedCount(0);
+    setReady(false);
     setError("");
-    setTime(0);
     setDurations({});
     setTimings({});
     setPlaying(false);
     playingRef.current = false;
-    positionRef.current = 0;
-    tracksRef.current = [];
-    indexRef.current = -1;
+    seekingRef.current = false;
+    playbackOnlyRef.current = false;
+    failuresRef.current = new Map();
+    tracksRef.current = Array(lesson.scenes.length).fill(null);
+    indexRef.current = resume?.index ?? -1;
+    localPositionRef.current = resume?.localTime || 0;
+    timelineRef.current = buildTimeline(lesson.scenes);
+    positionRef.current = resume
+      ? timelineRef.current[resume.index].start + resume.localTime
+      : 0;
+    setTime(positionRef.current);
 
     const updateClock = () => {
       if (!seekingRef.current && indexRef.current >= 0 && playingRef.current) {
         const segment = timelineRef.current[indexRef.current];
         if (segment) {
+          localPositionRef.current = media.currentTime;
           positionRef.current = segment.start + media.currentTime;
           setTime(positionRef.current);
         }
@@ -204,172 +160,122 @@ export function useLessonPlayer(lesson) {
       frame = requestAnimationFrame(updateClock);
     };
     frame = requestAnimationFrame(updateClock);
+    media.onwaiting = () => {
+      if (playingRef.current) setBuffering(true);
+    };
+    media.onplaying = () => setBuffering(false);
     media.onended = () => {
       if (!playingRef.current || seekingRef.current) return;
       const nextIndex = indexRef.current + 1;
-      if (nextIndex < tracksRef.current.length) {
-        const nextTime = timelineRef.current[nextIndex].start;
-        positionRef.current = nextTime;
-        setTime(nextTime);
+      if (nextIndex < lesson.scenes.length) {
+        positionRef.current = timelineRef.current[nextIndex].start;
+        setTime(positionRef.current);
         switchRef.current(nextIndex, 0, true);
       } else {
         positionRef.current = timelineRef.current.at(-1).end;
         setTime(positionRef.current);
         playingRef.current = false;
         setPlaying(false);
+        setBuffering(false);
       }
     };
     media.onerror = () => {
-      if (!signal.aborted) {
-        playingRef.current = false;
-        setPlaying(false);
-        setError("Narration could not play. Reload the audio to try again.");
+      if (signal.aborted || !media.getAttribute("src")) return;
+      if (media.error?.code === 1) return; // A cancelled load is not corrupt audio.
+      playingRef.current = false;
+      setPlaying(false);
+      setBuffering(false);
+      // A device/output failure is not a damaged recording. Reuse its audio.
+      if (
+        /audio_renderer|audio output|audio device/i.test(
+          media.error?.message || "",
+        )
+      ) {
+        playbackOnlyRef.current = true;
+        setError(
+          "Your browser could not open its audio output. Check your speaker connection, then press Play.",
+        );
+        return;
       }
+      playbackOnlyRef.current = false;
+      if ([3, 4].includes(media.error?.code))
+        invalidAudioRef.current.add(indexRef.current);
+      setError(
+        `Chapter ${indexRef.current + 1} audio could not play. Retry audio to repair this chapter.`,
+      );
     };
 
+    function publish(index, stored) {
+      const url = URL.createObjectURL(stored.blob);
+      objectUrls.push(url);
+      tracksRef.current[index] = { url, duration: stored.duration };
+      sceneDurations[lesson.scenes[index].id] = stored.duration;
+      if (stored.cues) sceneTimings[lesson.scenes[index].id] = stored.cues;
+      // Keep measured chapter offsets current while later audio prepares.
+      timelineRef.current = buildTimeline(
+        lesson.scenes,
+        sceneDurations,
+        sceneTimings,
+      );
+      setDurations({ ...sceneDurations });
+      setTimings({ ...sceneTimings });
+      setLoadedCount(tracksRef.current.filter(Boolean).length);
+      setReady(Boolean(tracksRef.current[0]));
+      if (indexRef.current >= 0) {
+        positionRef.current =
+          timelineRef.current[indexRef.current].start +
+          localPositionRef.current;
+        setTime(positionRef.current);
+      }
+      if (indexRef.current === index || (indexRef.current < 0 && index === 0)) {
+        switchRef.current(index, localPositionRef.current, playingRef.current);
+      }
+    }
+
     async function prepare() {
-      const sceneDurations = {};
-      const sceneTimings = {};
       let nextIndex = 0;
-      // Bundled samples are small static files; load them together. Keep paid
-      // speech generation limited to two requests and cache every completed clip.
       async function worker() {
-        while (nextIndex < lesson.scenes.length && !signal.aborted && !failed) {
+        while (nextIndex < lesson.scenes.length && !signal.aborted) {
           const index = nextIndex++;
-          const scene = lesson.scenes[index];
-          let stored = await getAudio(lesson.id, scene.id);
-          signal.throwIfAborted();
-          if (stored && scene.steps && !validCues(stored, scene.steps))
-            stored = null;
-          let changed = false;
-          if (!stored) {
-            changed = true;
-            if (lesson.source === "sample") {
-              stored = await loadSampleAudio(scene, signal);
-              if (scene.sampleCuesUrl) {
-                const response = await fetch(scene.sampleCuesUrl, { signal });
-                if (!response.ok)
-                  throw new Error(
-                    "The sample timing could not be loaded. Please retry.",
-                  );
-                const metadata = await response.json();
-                stored.cues = metadata.cues;
-                stored.wordTimingVersion = metadata.wordTimingVersion;
-                stored.sampleWordTimingVersion = WORD_TIMING_VERSION;
-              }
-            } else {
-              const payload = await apiRequest(
-                "/api/speech",
-                {
-                  text: scene.narration,
-                  token: scene.speechToken,
-                  segments: scene.steps?.map((step) => step.narration),
-                },
-                { signal },
-              );
-              const blob = audioFromBase64(payload.audio, payload.mimeType);
-              // Read actual media duration so all controls follow the real audio clock.
-              stored = {
-                blob,
-                duration: await measureAudio(blob, signal),
-                cues: payload.cues,
-                wordTimingVersion: payload.wordTimingVersion,
-              };
-            }
+          try {
+            const stored = await loadChapterAudio({
+              lesson,
+              scene: lesson.scenes[index],
+              getAudio,
+              saveAudio,
+              signal,
+              ignoreCache: invalidAudioRef.current.has(index),
+            });
             signal.throwIfAborted();
-            if (scene.steps && !validCues(stored, scene.steps))
-              throw new Error(
-                "The narration timing is incomplete. Please retry.",
-              );
-          } else if (
-            lesson.source === "sample" &&
-            scene.steps &&
-            scene.sampleCuesUrl &&
-            stored.sampleWordTimingVersion !== WORD_TIMING_VERSION
-          ) {
-            // Upgrade the existing preview's cue metadata without replacing its
-            // cached voice recording or creating a second lesson.
-            try {
-              const response = await fetch(scene.sampleCuesUrl, {
-                signal,
-                cache: "no-store",
-              });
-              if (response.ok) {
-                const metadata = await response.json();
-                const updated = {
-                  ...stored,
-                  cues: metadata.cues,
-                  sampleWordTimingVersion: WORD_TIMING_VERSION,
-                };
-                if (validCues(updated, scene.steps)) {
-                  stored = updated;
-                  changed = true;
-                }
-              }
-            } catch {
-              signal.throwIfAborted(); // Offline cached playback still works.
+            invalidAudioRef.current.delete(index);
+            publish(index, stored);
+          } catch (failure) {
+            if (signal.aborted) return;
+            const message = `Chapter ${index + 1}: ${failure.message || "Narration could not be prepared. Please retry audio."}`;
+            failuresRef.current.set(index, message);
+            setError(message);
+            if (indexRef.current === index) {
+              playingRef.current = false;
+              setPlaying(false);
+              setBuffering(false);
             }
           }
-          if (
-            scene.steps &&
-            (stored.wordTimingVersion !== WORD_TIMING_VERSION ||
-              !stored.cues.every(validWordTimings))
-          ) {
-            stored = {
-              ...stored,
-              cues: stored.cues.map((cue) =>
-                validWordTimings(cue)
-                  ? cue
-                  : { ...cue, words: estimateWordTimings(cue) },
-              ),
-              wordTimingVersion: WORD_TIMING_VERSION,
-            };
-            changed = true;
-          }
-          if (changed) await saveAudio(lesson.id, scene.id, stored);
-          signal.throwIfAborted();
-          if (scene.steps) sceneTimings[scene.id] = stored.cues;
-          const url = URL.createObjectURL(stored.blob);
-          objectUrls.push(url);
-          tracksRef.current[index] = { url, duration: stored.duration };
-          sceneDurations[scene.id] = stored.duration;
-          setLoadedCount((count) => count + 1);
         }
       }
-      try {
-        const workers =
-          lesson.source === "sample" ? Math.min(6, lesson.scenes.length) : 2;
-        await Promise.all(Array.from({ length: workers }, worker));
-        signal.throwIfAborted();
-        setDurations(sceneDurations);
-        setTimings(sceneTimings);
-        // Set the ref synchronously before initial media events can fire.
-        timelineRef.current = buildTimeline(
-          lesson.scenes,
-          sceneDurations,
-          sceneTimings,
-        );
-        setLoading(false);
-        switchRef.current(0, 0, false);
-      } catch (failure) {
-        failed = true;
-        if (!signal.aborted) {
-          setError(
-            failure.message ||
-              "The voice could not be prepared. Please try again.",
-          );
-          setLoading(false);
-        }
-      }
+      // Start the lesson as soon as its first recording is ready. Two workers
+      // prepare the rest, without increasing paid concurrency or skipping review.
+      const workers =
+        lesson.source === "sample" ? Math.min(6, lesson.scenes.length) : 2;
+      await Promise.all(Array.from({ length: workers }, worker));
+      if (!signal.aborted) setPreparing(false);
     }
     prepare();
     return () => {
       controller.abort();
       cancelAnimationFrame(frame);
       operationRef.current++;
-      media.onended = null;
-      media.onerror = null;
-      media.onloadedmetadata = null;
+      media.onended = media.onerror = media.onloadedmetadata = null;
+      media.onwaiting = media.onplaying = null;
       media.pause();
       media.removeAttribute("src");
       media.load();
@@ -377,16 +283,12 @@ export function useLessonPlayer(lesson) {
       if (audioRef.current === media) audioRef.current = null;
       playingRef.current = false;
     };
-    // A bookmark or chat update does not restart playback. Lesson content is immutable.
+    // Content is immutable. Bookmark and chat updates must not restart playback.
   }, [lesson.id, attempt, getAudio, saveAudio]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const seek = useCallback(
     (value) => {
-      if (
-        loading ||
-        tracksRef.current.filter(Boolean).length !== lesson.scenes.length
-      )
-        return;
+      if (!tracksRef.current[0]) return;
       const state = resolvePlayback(timelineRef.current, value);
       if (!state) return;
       positionRef.current = state.time;
@@ -397,16 +299,13 @@ export function useLessonPlayer(lesson) {
         playingRef.current && state.time < state.total,
       );
     },
-    [loading, lesson.scenes.length, switchTrack],
+    [switchTrack],
   );
 
   const play = useCallback(() => {
-    if (
-      loading ||
-      tracksRef.current.filter(Boolean).length !== lesson.scenes.length
-    )
-      return;
-    setError("");
+    if (!tracksRef.current[0]) return;
+    if (playbackOnlyRef.current) setError("");
+    playbackOnlyRef.current = false;
     const position =
       positionRef.current >= timelineRef.current.at(-1).end - 0.05
         ? 0
@@ -415,7 +314,7 @@ export function useLessonPlayer(lesson) {
     positionRef.current = position;
     setTime(position);
     switchTrack(state.index, state.localTime, true);
-  }, [loading, lesson.scenes.length, switchTrack]);
+  }, [switchTrack]);
 
   const restart = useCallback(() => {
     pause();
@@ -426,22 +325,36 @@ export function useLessonPlayer(lesson) {
     setSpeedState(value);
     if (audioRef.current) audioRef.current.playbackRate = value;
   }, []);
+  const retry = () => {
+    if (playbackOnlyRef.current) return play();
+    if (preparing) return;
+    resumeRef.current = {
+      index: Math.max(0, indexRef.current),
+      localTime: localPositionRef.current,
+    };
+    setAttempt((value) => value + 1);
+  };
 
   return {
     time,
     total,
     state: resolvePlayback(timeline, time),
     playing,
-    loading,
+    loading: !ready && preparing && !error,
+    preparing,
+    buffering,
     loadedCount,
+    chapterCount: lesson.scenes.length,
     error,
     speed,
-    ready: !loading && loadedCount === lesson.scenes.length,
+    ready,
+    retryDisabled: preparing && !playbackOnlyRef.current,
+    retryLabel: playbackOnlyRef.current ? "Play narration" : "Retry audio",
     play,
     pause,
     seek,
     restart,
     setSpeed,
-    retry: () => setAttempt((value) => value + 1),
+    retry,
   };
 }

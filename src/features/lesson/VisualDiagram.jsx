@@ -1,65 +1,18 @@
 "use client";
 
 import { useId, useMemo } from "react";
-import {
-  Sun,
-  Droplets,
-  Cloud,
-  CloudRain,
-  Leaf,
-  Earth,
-  Atom,
-  Brain,
-  Cpu,
-  Battery,
-  Lightbulb,
-  Settings,
-  Server,
-  UserRound,
-  Database,
-} from "lucide-react";
 import { resolveVisualStep } from "@/lib/visual-lesson";
 import { cn } from "@/lib/utils";
 import { ArrayDiagram } from "./ArrayDiagram";
 import { connectorPath, diagramPositions, wrapLabel } from "./visual-layout";
 import { visualizationColors as colors } from "./style";
+import { DiagramSymbol } from "./DiagramSymbol";
+import { hasIllustration, resolveVisualSymbol } from "@/lib/visual-symbols";
 
-const symbols = {
-  sun: Sun,
-  water: Droplets,
-  cloud: Cloud,
-  rain: CloudRain,
-  leaf: Leaf,
-  earth: Earth,
-  atom: Atom,
-  brain: Brain,
-  chip: Cpu,
-  battery: Battery,
-  light: Lightbulb,
-  gear: Settings,
-  server: Server,
-  person: UserRound,
-  database: Database,
-};
 const numberFormat = new Intl.NumberFormat("en", {
   notation: "compact",
   maximumSignificantDigits: 3,
 });
-
-function NodeSymbol({ name, x, y, color, size = 24 }) {
-  const Icon = symbols[name];
-  return Icon ? (
-    <Icon
-      x={x}
-      y={y}
-      width={size}
-      height={size}
-      color={color}
-      strokeWidth={1.6}
-      aria-hidden="true"
-    />
-  ) : null;
-}
 
 function TextLines({
   text,
@@ -103,12 +56,21 @@ export function VisualDiagram({
     [scene, stepIndex],
   );
   const width = compact ? 480 : 960;
+  // Recompose conceptual scenes around what is actually being taught. Ordered
+  // arrays, comparisons, charts and cycles keep their fixed spatial meaning.
+  const layoutNodes = ["concept", "flow"].includes(state.layout)
+    ? state.nodes.filter((node) => state.visible.has(node.id))
+    : state.nodes;
+  const layoutIds = new Set(layoutNodes.map((node) => node.id));
+  const layoutLinks = state.links.filter(
+    (link) => layoutIds.has(link.from) && layoutIds.has(link.to),
+  );
   const positions = diagramPositions(
     state.layout,
-    state.nodes.length,
+    layoutNodes.length,
     compact,
-    state.nodes,
-    state.links,
+    layoutNodes,
+    layoutLinks,
   );
   const height = Math.max(
     state.layout === "array"
@@ -117,12 +79,32 @@ export function VisualDiagram({
         : 380
       : state.layout === "cycle"
         ? 600
-        : 500,
-    ...positions.map((p) => p.y + p.h + 90),
+        : ["concept", "flow"].includes(state.layout)
+          ? 340
+          : 500,
+    ...positions.map((p) => p.y + p.h + 42),
   );
   const positionById = new Map(
-    state.nodes.map((node, index) => [node.id, positions[index]]),
+    layoutNodes.map((node, index) => [node.id, positions[index]]),
   );
+  const connectorBounds = (id, otherId) => {
+    const p = positionById.get(id);
+    const node = state.nodes.find((item) => item.id === id);
+    if (
+      !hasIllustration(node) ||
+      (compact && p.y !== positionById.get(otherId).y)
+    )
+      return p;
+    const comparison = state.layout === "comparison",
+      cycle = state.layout === "cycle";
+    const radius = comparison ? 72 : cycle ? 46 : 52;
+    return {
+      x: p.x + p.w / 2 - radius,
+      y: p.y + (comparison ? 70 : cycle ? 50 : 55) - radius,
+      w: radius * 2,
+      h: radius * 2,
+    };
+  };
   const draw = reducedMotion ? 1 : Math.min(1, Math.max(0, elapsed / 0.45));
   const description = state.nodes
     .filter((n) => state.visible.has(n.id))
@@ -166,15 +148,15 @@ export function VisualDiagram({
           />
         </marker>
       </defs>
-      <text
-        x="30"
-        y="38"
-        fontSize={compact ? 15 : 16}
-        fontWeight="500"
-        fill="#64748b"
-      >
-        {state.caption}
-      </text>
+      <TextLines
+        text={state.caption}
+        x={width / 2}
+        y={30}
+        limit={compact ? 34 : 65}
+        size={compact ? 16 : 17}
+        weight={500}
+        maxLines={2}
+      />
       {state.layout === "cycle" && (
         <ellipse
           cx={width / 2}
@@ -191,13 +173,42 @@ export function VisualDiagram({
           if (!state.visible.has(link.from) || !state.visible.has(link.to))
             return null;
           const path = connectorPath(
-            positionById.get(link.from),
-            positionById.get(link.to),
+            connectorBounds(link.from, link.to),
+            connectorBounds(link.to, link.from),
           );
           const active = state.focus.has(link.to) || state.focus.has(link.from);
+          // On a narrow board, share repeated relationship labels at a branch
+          // or merge instead of stacking identical text over crossing arrows.
+          let showLabel = Boolean(link.label);
+          let labelX = path.x,
+            labelY = path.y;
+          if (compact && link.label) {
+            const visibleLinks = state.links.filter(
+              (item) =>
+                state.visible.has(item.from) && state.visible.has(item.to),
+            );
+            const outgoing = visibleLinks.filter(
+              (item) => item.from === link.from && item.label === link.label,
+            );
+            const incoming = visibleLinks.filter(
+              (item) => item.to === link.to && item.label === link.label,
+            );
+            const from = positionById.get(link.from),
+              to = positionById.get(link.to);
+            if (outgoing.length > 1 && Math.abs(to.y - from.y) > from.h) {
+              showLabel = outgoing[0] === link;
+              labelX = from.x + from.w / 2;
+              labelY = from.y + from.h + 22;
+            } else if (incoming.length > 1 && Math.abs(to.y - from.y) > to.h) {
+              showLabel = incoming[0] === link;
+              labelX = to.x + to.w / 2;
+              labelY = to.y - 30;
+            }
+          }
           const labelWidth = Math.max(
             36,
-            link.label.length * (compact ? 6 : 7) + 12,
+            Math.min(link.label.length, compact ? 14 : 20) * (compact ? 8 : 7) +
+              14,
           );
           return (
             <g
@@ -216,23 +227,23 @@ export function VisualDiagram({
                 strokeDasharray="1"
                 strokeDashoffset={active ? 1 - draw : 0}
               />
-              {link.label && (
+              {showLabel && (
                 <g>
                   <rect
-                    x={path.x - labelWidth / 2}
-                    y={path.y - 12}
+                    x={labelX - labelWidth / 2}
+                    y={labelY - 13}
                     width={labelWidth}
-                    height="22"
+                    height={link.label.length > (compact ? 14 : 20) ? 40 : 24}
                     rx="11"
                     fill="#ffffff"
                   />
                   <TextLines
                     text={link.label}
-                    x={path.x}
-                    y={path.y + 3}
-                    size={compact ? 11 : 13}
-                    limit={22}
-                    maxLines={1}
+                    x={labelX}
+                    y={labelY + 3}
+                    size={compact ? 15 : 13}
+                    limit={compact ? 14 : 20}
+                    maxLines={2}
                   />
                 </g>
               )}
@@ -325,41 +336,46 @@ export function VisualDiagram({
           })}
         </>
       ) : (
-        state.nodes.map((node, index) => {
+        state.nodes.map((node) => {
           if (!state.visible.has(node.id)) return null;
-          const p = positions[index],
+          const p = positionById.get(node.id),
             active = state.focus.has(node.id),
             dim = state.dim.has(node.id),
             tone = colors[node.color];
           const cycle = state.layout === "cycle",
             equation = state.layout === "equation",
             comparison = state.layout === "comparison";
-          const hasSymbol = Boolean(symbols[node.symbol]);
+          const symbol = resolveVisualSymbol(node);
+          const illustrated = hasIllustration(node);
+          const hasSymbol = symbol !== "none";
           const narrow = p.w < 155;
+          const tight = p.w < 210;
           const labelY = equation
             ? p.y + p.h / 2 + 7
-            : p.y +
-              (comparison
-                ? 75
-                : cycle
-                  ? hasSymbol
-                    ? 73
-                    : 49
-                  : hasSymbol
-                    ? 52
-                    : 35);
+            : illustrated
+              ? p.y + (comparison ? 155 : cycle ? 119 : 124)
+              : p.y +
+                (comparison
+                  ? 75
+                  : cycle
+                    ? hasSymbol
+                      ? 73
+                      : 49
+                    : hasSymbol
+                      ? 52
+                      : 35);
           const labelSize = equation
             ? compact
               ? 21
               : 27
             : cycle
               ? compact
-                ? 16
+                ? 20
                 : 19
               : narrow
                 ? 15
                 : compact
-                  ? 18
+                  ? 22
                   : 20;
           return (
             <g
@@ -369,23 +385,51 @@ export function VisualDiagram({
               data-dimmed={dim}
               opacity={dim ? 0.35 : 1}
             >
-              <rect
-                x={p.x}
-                y={p.y}
-                width={p.w}
-                height={p.h}
-                rx={12}
-                fill={active ? tone.soft : "#ffffff"}
-                stroke={active ? tone.ink : "#dde4ef"}
-                strokeWidth={active ? 1.6 : 1}
-              />
+              {illustrated ? (
+                <ellipse
+                  cx={p.x + p.w / 2}
+                  cy={p.y + (comparison ? 70 : cycle ? 50 : 55)}
+                  rx={comparison ? 72 : cycle ? 46 : 52}
+                  ry={comparison ? 62 : cycle ? 46 : 49}
+                  fill={active ? tone.soft : "#f4f6fa"}
+                  stroke={active ? tone.ink : "#e8edf5"}
+                  strokeWidth={active ? 1.5 : 0.8}
+                />
+              ) : (
+                <rect
+                  x={p.x}
+                  y={p.y}
+                  width={p.w}
+                  height={p.h}
+                  rx={12}
+                  fill={active ? tone.soft : "#ffffff"}
+                  stroke={active ? tone.ink : "#dde4ef"}
+                  strokeWidth={active ? 2 : 1}
+                />
+              )}
               {!equation &&
                 (hasSymbol ? (
-                  <NodeSymbol
-                    name={node.symbol}
-                    x={cycle || comparison ? p.x + p.w / 2 - 15 : p.x + 16}
-                    y={p.y + 15}
-                    size={cycle || comparison ? 30 : 20}
+                  <DiagramSymbol
+                    name={symbol}
+                    x={
+                      illustrated
+                        ? p.x + p.w / 2 - (comparison ? 50 : cycle ? 32 : 36)
+                        : cycle || comparison
+                          ? p.x + p.w / 2 - 15
+                          : p.x + 16
+                    }
+                    y={p.y + (illustrated ? 18 : 15)}
+                    size={
+                      illustrated
+                        ? comparison
+                          ? 100
+                          : cycle
+                            ? 64
+                            : 72
+                        : cycle || comparison
+                          ? 30
+                          : 20
+                    }
                     color={tone.ink}
                   />
                 ) : (
@@ -406,7 +450,15 @@ export function VisualDiagram({
                 color={active ? tone.ink : "#24324b"}
                 weight={600}
                 limit={
-                  equation ? 32 : cycle ? 16 : narrow ? 14 : compact ? 16 : 20
+                  equation
+                    ? 32
+                    : cycle
+                      ? 12
+                      : narrow
+                        ? 12
+                        : compact || tight
+                          ? 14
+                          : 20
                 }
                 maxLines={equation ? 1 : 2}
               />
@@ -414,38 +466,26 @@ export function VisualDiagram({
                 <TextLines
                   text={node.detail}
                   x={p.x + p.w / 2}
-                  y={p.y + (comparison ? 134 : hasSymbol ? 99 : 83)}
-                  limit={narrow ? 16 : compact ? 20 : 32}
-                  size={narrow ? 11 : compact ? 13 : 15}
+                  y={
+                    p.y +
+                    (illustrated
+                      ? comparison
+                        ? 197
+                        : 190
+                      : comparison
+                        ? 134
+                        : hasSymbol
+                          ? 99
+                          : 83)
+                  }
+                  limit={compact ? 17 : tight ? 20 : 32}
+                  size={compact ? 18 : narrow ? 11 : 15}
                   maxLines={comparison ? 4 : 2}
                 />
               )}
             </g>
           );
         })
-      )}
-      {state.note && (
-        <g>
-          <line
-            x1={width / 2 - 13}
-            y1={height - 72}
-            x2={width / 2 + 13}
-            y2={height - 72}
-            stroke="#c1cbed"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <TextLines
-            text={state.note}
-            x={width / 2}
-            y={height - 43}
-            limit={compact ? 40 : 75}
-            size={compact ? 18 : 20}
-            color="#4055a1"
-            weight={500}
-            maxLines={2}
-          />
-        </g>
       )}
     </svg>
   );
