@@ -37,7 +37,10 @@ export function MobileNavigation() {
             Switch between AI chat and whiteboard lessons, history and saved
             items.
           </SheetDescription>
-          <AppSidebar onNavigate={() => setOpen(false)} />
+          <AppSidebar
+            onNavigate={() => setOpen(false)}
+            showThemeToggle={false}
+          />
         </SheetContent>
       </Sheet>
       <Link

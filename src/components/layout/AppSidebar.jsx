@@ -16,7 +16,7 @@ import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { WorkspaceNavigation } from "./WorkspaceNavigation";
 import { layoutStyles as s } from "./style";
 
-export function AppSidebar({ onNavigate }) {
+export function AppSidebar({ onNavigate, showThemeToggle = true }) {
   const pathname = usePathname();
   const isChat = pathname === "/ai";
   const NewLink = isChat ? NewChatLink : NewLessonLink;
@@ -34,7 +34,7 @@ export function AppSidebar({ onNavigate }) {
         >
           <BrandMark /> Look
         </Link>
-        <ThemeToggle />
+        {showThemeToggle && <ThemeToggle />}
       </div>
       <WorkspaceSwitcher isChat={isChat} onNavigate={onNavigate} />
       <Button asChild className={s.newLesson}>
