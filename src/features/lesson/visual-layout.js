@@ -50,13 +50,13 @@ function conceptPositions(nodes, links, compact) {
   );
   const positions = new Map();
   const illustrated = nodes.some(hasIllustration);
-  const rowHeight = illustrated ? 232 : 130;
-  const rowGap = rowHeight + 44;
+  const rowHeight = illustrated ? 234 : 150;
+  const rowGap = rowHeight + 64;
   const rowCount = Math.max(...groups.map((group) => group.length));
   const columnWidth = depth === 4 ? 180 : 240;
   const columnGap = depth === 4 ? 64 : 80;
   if (compact) {
-    let top = 100;
+    let top = 24;
     for (let level = 0; level < groups.length; level++) {
       let group = groups[level];
       // A simple input → output pair fits on one mobile row. Keep branches
@@ -86,7 +86,7 @@ function conceptPositions(nodes, links, compact) {
           x:
             (960 - depth * columnWidth - (depth - 1) * columnGap) / 2 +
             level * (columnWidth + columnGap),
-          y: 100 + ((rowCount - group.length) / 2 + index) * rowGap,
+          y: 24 + ((rowCount - group.length) / 2 + index) * rowGap,
           w: columnWidth,
           h: rowHeight,
         });
@@ -114,7 +114,7 @@ export function diagramPositions(
     const cell = compact ? 94 : Math.min(110, 840 / count);
     return Array.from({ length: count }, (_, i) => ({
       x: (width - columns * cell) / 2 + (i % columns) * cell + 5,
-      y: compact ? 96 + Math.floor(i / columns) * 132 : 146,
+      y: compact ? 48 + Math.floor(i / columns) * 132 : 70,
       w: cell - 10,
       h: compact ? 72 : 76,
     }));
@@ -123,28 +123,49 @@ export function diagramPositions(
     return Array.from({ length: count }, (_, i) => {
       const angle = -Math.PI / 2 + (i * Math.PI * 2) / count;
       const w = compact ? 128 : 176,
-        h = illustrated ? 150 : 108;
+        h = illustrated ? 166 : 110;
       return {
         x: width / 2 + Math.cos(angle) * (compact ? 150 : 300) - w / 2,
-        y: 290 + Math.sin(angle) * 155 - h / 2,
+        y:
+          (compact ? 340 : 300) +
+          Math.sin(angle) * (compact ? 224 : 210) -
+          h / 2,
         w,
         h,
       };
     });
   }
-  if (layout === "comparison")
+  if (layout === "comparison") {
+    const labelY = illustrated ? 114 : 42;
+    const labelSize = compact ? 22 : 20;
+    const detailSize = compact ? 18 : 15;
+    const height = Math.max(
+      160,
+      ...nodes.map((node) => {
+        const labels = wrapLabel(node.label, compact ? 14 : 26, 2).length;
+        const details = wrapLabel(node.detail, compact ? 17 : 32, 4).length;
+        return (
+          labelY +
+          (labels - 1) * labelSize * 1.35 +
+          (details ? 27 + (details - 1) * detailSize * 1.35 : 0) +
+          24
+        );
+      }),
+    );
     return [0, 1].map((i) => ({
       x: compact ? 28 + i * 228 : 80 + i * 420,
-      y: 145,
+      y: 24,
       w: compact ? 196 : 380,
-      h: illustrated ? 280 : 220,
+      h: height,
+      illustratedRow: illustrated,
     }));
+  }
   if (layout === "equation") {
     return Array.from({ length: count }, (_, i) => ({
       x: compact ? 35 : 160,
-      y: 92 + i * (310 / count),
+      y: 24 + i * 96,
       w: compact ? 410 : 640,
-      h: 310 / count - 10,
+      h: 72,
     }));
   }
   const columns = compact ? 2 : 3;
@@ -157,50 +178,9 @@ export function diagramPositions(
       layout === "flow" && row % 2 ? inRow - 1 - (i % columns) : i % columns;
     return {
       x: (width - inRow * w - (inRow - 1) * gap) / 2 + column * (w + gap),
-      y: 100 + row * (illustrated ? 276 : 155),
+      y: 24 + row * (illustrated ? 298 : 214),
       w,
-      h: illustrated ? 232 : 125,
+      h: illustrated ? 234 : 150,
     };
   });
-}
-
-export function connectorPath(from, to) {
-  const ax = from.x + from.w / 2,
-    ay = from.y + from.h / 2;
-  const bx = to.x + to.w / 2,
-    by = to.y + to.h / 2;
-  const dx = bx - ax,
-    dy = by - ay;
-  const horizontal =
-    Math.abs(dx) / (from.w + to.w) > Math.abs(dy) / (from.h + to.h);
-  const x1 = ax + (horizontal ? Math.sign(dx) * (from.w / 2 + 6) : 0);
-  const y1 = ay + (!horizontal ? Math.sign(dy) * (from.h / 2 + 6) : 0);
-  const x2 = bx - (horizontal ? Math.sign(dx) * (to.w / 2 + 10) : 0);
-  const y2 = by - (!horizontal ? Math.sign(dy) * (to.h / 2 + 10) : 0);
-  // Put diagonal labels nearer their source so crossing relationships do not
-  // stack their labels at the same midpoint. Evaluate the actual cubic path.
-  const t = Math.abs(dx) > 1 && Math.abs(dy) > 1 ? 0.32 : 0.5;
-  const cubic = (a, b, c, d) =>
-    (1 - t) ** 3 * a +
-    3 * (1 - t) ** 2 * t * b +
-    3 * (1 - t) * t * t * c +
-    t ** 3 * d;
-  return {
-    d: `M ${x1} ${y1} C ${horizontal ? (x1 + x2) / 2 : x1} ${horizontal ? y1 : (y1 + y2) / 2}, ${horizontal ? (x1 + x2) / 2 : x2} ${horizontal ? y2 : (y1 + y2) / 2}, ${x2} ${y2}`,
-    x: cubic(
-      x1,
-      horizontal ? (x1 + x2) / 2 : x1,
-      horizontal ? (x1 + x2) / 2 : x2,
-      x2,
-    ),
-    y:
-      Math.abs(dy) < 1 && Math.abs(x2 - x1) < 70
-        ? Math.min(from.y, to.y) - 14
-        : cubic(
-            y1,
-            horizontal ? y1 : (y1 + y2) / 2,
-            horizontal ? y2 : (y1 + y2) / 2,
-            y2,
-          ) - 14,
-  };
 }

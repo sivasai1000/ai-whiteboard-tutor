@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { AppSidebar } from "./AppSidebar";
 import { BrandMark } from "./Brand";
+import { ThemeToggle } from "./ThemeToggle";
 import { NewLessonLink } from "./NewLessonLink";
 import { NewChatLink } from "@/features/ai/NewChatLink";
 import { layoutStyles as s } from "./style";
@@ -44,13 +45,16 @@ export function MobileNavigation() {
         className="flex items-center gap-2 text-lg font-semibold tracking-tight"
       >
         <BrandMark className="size-6" />
-        Braynix
+        Look
       </Link>
-      <Button asChild size="icon" variant="ghost">
-        <NewLink aria-label={isChat ? "New chat" : "New lesson"}>
-          <Plus className="size-5" />
-        </NewLink>
-      </Button>
+      <div className="flex items-center">
+        <ThemeToggle />
+        <Button asChild size="icon" variant="ghost" className="size-11">
+          <NewLink aria-label={isChat ? "New chat" : "New lesson"}>
+            <Plus className="size-5" />
+          </NewLink>
+        </Button>
+      </div>
     </header>
   );
 }

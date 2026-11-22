@@ -20,11 +20,11 @@ export function LessonToolbar({
 }) {
   return (
     <header className={s.toolbar}>
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
         <Button
           variant="ghost"
           size="icon"
-          className="size-8 shrink-0 text-muted-foreground"
+          className="size-10 shrink-0 text-muted-foreground"
           asChild
         >
           <Link href="/" aria-label="Back to new lesson">
@@ -64,7 +64,7 @@ export function LessonToolbar({
         <Button
           variant={chatOpen ? "secondary" : "ghost"}
           size="icon"
-          className="size-8 xl:hidden"
+          className="size-10 xl:hidden"
           onClick={onToggleChat}
           aria-label={chatOpen ? "Show whiteboard" : "Open tutor chat"}
         >

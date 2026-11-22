@@ -1,10 +1,10 @@
-# Braynix · AI Interactive Whiteboard Tutor
+# Look · AI Interactive Whiteboard Tutor
 
-Learn a topic through a short spoken lesson, synchronized diagrams, and follow-up questions. Braynix combines an interactive whiteboard with a separate streaming AI chat workspace.
+Learn a topic through a short spoken lesson, synchronized diagrams, and follow-up questions. Look combines an interactive whiteboard with a separate streaming AI chat workspace.
 
-Built by **Siva Sai** for the Braynix Studios technical assignment.
+Built by **Siva Sai**. Originally created for the Braynix Studios technical assignment and now branded as **Look**.
 
-**[Live demo](https://ai-whiteboard-tutor-amber.vercel.app)** · **[Source code](https://github.com/sivasai1000/ai-whiteboard-tutor)** · **[Architecture](docs/architecture.md)**
+**[Live demo](https://look-ai-tutor.vercel.app)** · **[Source code](https://github.com/sivasai1000/ai-whiteboard-tutor)** · **[Architecture](docs/architecture.md)**
 
 ## Try it
 
@@ -28,7 +28,7 @@ New lessons, narration and chat use the server's configured OpenAI account. The 
 | Tutor follow-ups | Questions answered with the current lesson as context |
 | AI Chat | Real SSE streaming, Markdown/code rendering, copy, stop, retry and regenerate |
 | Personal library | Separate chat and lesson history, bookmarks and deletion confirmation; chat history is searchable |
-| Responsive interface | Compact mobile composers, shared model/effort menus, mobile navigation and locally served official branding |
+| Responsive interface | Compact mobile layouts, a scrollable board with visible playback controls, light/dark mode, shared model/effort menus and Look branding |
 
 Both workspaces offer **Low, Medium and High** reasoning effort. Only the server-configured model is enabled. Other model entries open a contact dialog; they do not change the active model or start a provider request. Higher effort can increase latency and cost.
 
@@ -72,7 +72,7 @@ Open **http://127.0.0.1:3000**.
 | Persistence | Browser IndexedDB through `idb` |
 | Hosting | Vercel, with Node.js API routes |
 
-Components use reusable Tailwind class strings in feature-level `style.js` files. `globals.css` holds Tailwind imports and shared theme tokens.
+Components use reusable Tailwind class strings in feature-level `style.js` files. `globals.css` holds shared light/dark theme and diagram tokens. The theme follows the system until changed, then remembers the choice in this browser.
 
 ## How a lesson works
 
@@ -128,7 +128,7 @@ src/
   server/                      Provider services, prompts, signing and quotas
   lib/                         Schemas, storage, diagram contracts and utilities
 public/
-  brand/                       Official Braynix brand mark
+  brand/                       Scalable Look brand mark
   sample/                      Versioned preview audio and timing metadata
   visuals/astronomy/           Local Earth and Moon imagery
 scripts/                       Sample-audio maintainer utility
@@ -167,7 +167,11 @@ Model availability depends on the provider account. Use compatible models for st
 | `braynix-lessons` | Up to 30 lessons, bookmarks, tutor messages and cached audio |
 | `braynix-conversations` | Up to 40 conversations with 80 messages each |
 
+The existing IndexedDB names and signing identifiers are retained for compatibility, so the Look rebrand preserves saved lessons, conversations, and narration tokens.
+
 Data belongs to the current browser and origin. It does not sync across devices; clearing site data removes it. Lesson URLs reference local records and are not public sharing links. Compatible older libraries are migrated locally, and old sample assets are retained so saved lessons keep the correct narration.
+
+Browser storage belongs to a specific origin. Moving from the previous deployment URL to `look-ai-tutor.vercel.app` starts a separate local library; existing data is not transferred across domains.
 
 For AI Chat, the server receives the latest 24 text messages within a 48,000-character context limit. User messages are limited to 4,000 characters. Replies are checkpointed during streaming; reloading restores saved text without automatically restarting a paid request. Text sent for generation goes to OpenAI even though the app's history is stored locally.
 
@@ -193,7 +197,7 @@ The repository has no automated test suite. After changing the application or de
 2. **Live lesson:** with a configured key, generate a fresh topic, play all chapters and ask a tutor follow-up. These requests use API credits.
 3. **AI Chat:** send a message, observe streamed text, stop a response, retry/regenerate and ask a follow-up.
 4. **Persistence:** save a lesson and a chat, reload, check their separate history/saved views and confirm deletion works.
-5. **Responsive UI:** check a narrow mobile viewport and desktop, including navigation, composer height, model/effort menus and the contact dialog.
+5. **Responsive UI:** check 320px and 375px mobile widths and desktop in both themes, including diagram text, connector paths, visible playback controls, navigation, model/effort menus and the contact dialog.
 
 A successful build or sample playback does not verify live provider access. Repeat a real lesson and chat after changing credentials or model configuration.
 
@@ -252,6 +256,6 @@ Already aligned chapters are skipped by `--align-only`.
 
 Made by **Siva Sai** · [sivasaimallipudi9h@gmail.com](mailto:sivasaimallipudi9h@gmail.com)
 
-The official brand mark and favicons are copied unchanged from [Braynix Studios](https://braynix.in/) and served locally. Astronomy asset provenance and assumptions are documented in [astronomy.md](docs/astronomy.md). AI coding tools assisted development; OpenAI provides runtime lesson generation, voice and answers.
+The Look mark is a lightweight SVG based on the supplied purple logo. Browser and Apple icons use the same artwork. The original design is kept in [`docs/branding/look-logo-reference.png`](docs/branding/look-logo-reference.png). Astronomy asset provenance and assumptions are documented in [astronomy.md](docs/astronomy.md). AI coding tools assisted development; OpenAI provides runtime lesson generation, voice and answers.
 
 Assignment reference: [Braynix Studios AI Whiteboard Tutor](https://github.com/Braynix-Studios/ai-whiteboard-tutor-assignment). Submission requires the source repository and verified live demo links in the [submission form](https://docs.google.com/forms/d/e/1FAIpQLSdFJoTxMEuFZrCHTbEgv7bbg2uLf33SjP7n0w2qUONR4kMRcA/viewform).

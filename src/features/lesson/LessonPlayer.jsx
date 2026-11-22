@@ -42,7 +42,8 @@ export function LessonPlayer({ player }) {
           <RotateCcw className="size-4" />
         </Button>
         <span className={s.mediaTime} data-testid="playback-time">
-          {formatTime(player.time)} <span className="text-slate-300">/</span>{" "}
+          {formatTime(player.time)}{" "}
+          <span className="text-muted-foreground/50">/</span>{" "}
           {player.loadedCount < player.chapterCount ? "~" : ""}
           {formatTime(player.total)}
         </span>

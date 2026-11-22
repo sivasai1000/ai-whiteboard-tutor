@@ -17,8 +17,8 @@ export function ArrayDiagram({ state, positions, compact }) {
             width={last.x + last.w - first.x + 16}
             height={first.h + 16}
             rx="14"
-            fill="#f4f6fb"
-            stroke="#e7ebf3"
+            fill="var(--diagram-surface)"
+            stroke="var(--diagram-grid)"
           />
         );
       })}
@@ -45,7 +45,7 @@ export function ArrayDiagram({ state, positions, compact }) {
               width={p.w}
               height={p.h}
               rx="9"
-              fill={active ? tone.ink : "#ffffff"}
+              fill={active ? tone.ink : "var(--board)"}
               fillOpacity={active ? 1 : dim ? 0.25 : 0.7}
             />
             <text
@@ -53,7 +53,13 @@ export function ArrayDiagram({ state, positions, compact }) {
               y={p.y + p.h / 2}
               dominantBaseline="central"
               textAnchor="middle"
-              fill={active ? "#ffffff" : dim ? "#64748b" : "#34415a"}
+              fill={
+                active
+                  ? "var(--diagram-on-color)"
+                  : dim
+                    ? "var(--diagram-muted)"
+                    : "var(--diagram-ink)"
+              }
               fontSize={size}
               fontWeight={active ? 600 : 500}
             >
@@ -63,7 +69,7 @@ export function ArrayDiagram({ state, positions, compact }) {
               x={p.x + p.w / 2}
               y={p.y + p.h + 33}
               textAnchor="middle"
-              fill={active ? tone.ink : "#738198"}
+              fill={active ? tone.ink : "var(--diagram-muted)"}
               fontSize="12"
               fontFamily="ui-monospace, monospace"
             >
@@ -86,7 +92,7 @@ export function ArrayDiagram({ state, positions, compact }) {
                 x2={p.x + p.w * 0.72}
                 y1={p.y + p.h * 0.64}
                 y2={p.y + p.h * 0.36}
-                stroke="#64748b"
+                stroke="var(--diagram-muted)"
                 strokeWidth="1.5"
               />
             )}

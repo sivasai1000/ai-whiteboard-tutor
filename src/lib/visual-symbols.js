@@ -60,15 +60,13 @@ const normalize = (word) =>
 export function resolveVisualSymbol(node) {
   if (
     ["lion", "lioness", "none"].includes(node.symbol) &&
-    /\blioness(?:es)?\b/i.test(`${node.label} ${node.detail || ""}`)
+    /\blioness(?:es)?\b/i.test(node.label)
   )
     return "lioness";
   if (node.symbol && node.symbol !== "none") return node.symbol;
-  // Old lessons can gain an illustration only when their text names one
-  // unambiguous subject. "Zebra or buffalo" must not become either animal.
-  const matches = new Set(
-    (`${node.label} ${node.detail || ""}`.match(animals) || []).map(normalize),
-  );
+  // Infer only from the subject, not its description. A node about grass
+  // eaten by a zebra must stay grass, and "Zebra or buffalo" is neither alone.
+  const matches = new Set((node.label.match(animals) || []).map(normalize));
   return matches.size === 1 ? [...matches][0] : "none";
 }
 

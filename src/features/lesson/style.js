@@ -1,70 +1,70 @@
 export const lessonStyles = {
   workspace:
-    "flex min-h-[calc(100dvh-52px)] flex-1 flex-col lg:h-dvh lg:min-h-0",
+    "flex h-[calc(100dvh-52px)] min-h-[560px] flex-1 flex-col lg:h-dvh lg:min-h-0",
   toolbar:
-    "flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-border px-4 sm:px-7",
+    "flex min-h-14 shrink-0 items-center justify-between gap-1 border-b border-border px-2 sm:min-h-16 sm:gap-3 sm:px-7",
   toolbarKicker:
-    "mb-1.5 flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground",
+    "mb-1 hidden items-center gap-2 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:flex",
   toolbarTitle:
-    "max-w-[48vw] truncate text-sm font-medium tracking-[-0.02em] sm:max-w-none sm:text-base",
+    "truncate text-[13px] font-medium tracking-[-0.02em] sm:text-base",
   body: "flex min-h-0 flex-1 flex-col xl:flex-row",
-  main: "relative flex min-h-0 min-w-0 flex-1 flex-col px-3 pb-4 pt-4 sm:px-6 sm:pt-6 lg:overflow-y-auto",
-  fullscreen:
-    "h-dvh w-screen overflow-y-auto bg-background px-4 py-4 sm:px-8 sm:py-5",
-  sceneHeading: "flex shrink-0 items-start justify-between gap-4 pb-5",
+  main: "relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto px-2 pb-2 pt-3 sm:px-6 sm:pb-4 sm:pt-6",
+  fullscreen: "h-dvh w-screen bg-background px-2 py-2 sm:px-8 sm:py-5",
+  sceneHeading:
+    "flex shrink-0 items-start justify-between gap-3 px-1 pb-3 sm:px-0 sm:pb-5",
   sceneCount:
-    "mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-primary",
+    "mb-1 text-[10px] font-medium uppercase tracking-[0.12em] text-primary",
   sceneTitle:
     "font-heading text-base font-medium leading-tight tracking-[-0.025em] sm:text-xl",
-  boardStage: "relative flex min-h-[440px] flex-1 flex-col sm:min-h-[480px]",
+  boardStage: "relative flex min-h-0 flex-1 flex-col",
   boardShell:
-    "relative flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_4px_28px_-16px_rgba(30,41,59,0.18)]",
+    "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-board shadow-sm",
   boardHeader:
-    "flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-3 sm:px-5",
+    "flex min-h-12 shrink-0 items-center justify-between gap-2 border-b border-border px-2 sm:min-h-14 sm:px-5",
   boardNote:
-    "flex min-w-0 items-center gap-2 text-xs font-medium text-slate-600",
+    "flex min-w-0 items-center gap-2 text-xs font-medium text-foreground/80",
   boardMark:
     "flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/7 text-primary",
   boardStep:
-    "ml-2 hidden border-l border-slate-200 pl-3 font-mono text-[10px] font-normal tabular-nums text-slate-400 sm:inline",
+    "ml-2 hidden border-l border-border pl-3 font-mono text-[10px] font-normal tabular-nums text-muted-foreground sm:inline",
   boardControls: "flex shrink-0 items-center gap-0.5",
   boardButton:
-    "size-11 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 sm:size-8",
+    "size-11 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground sm:size-8",
   fitButton:
-    "h-11 w-11 rounded-lg px-0 font-mono text-[11px] tabular-nums text-slate-500 hover:bg-slate-100 sm:h-8",
-  fullscreenButton: "ml-1 border-l border-slate-200 pl-1",
+    "h-11 w-11 rounded-lg px-0 font-mono text-[11px] tabular-nums text-muted-foreground hover:bg-accent sm:h-8",
+  fullscreenButton: "ml-1 border-l border-border pl-1",
   boardViewport:
-    "relative flex min-h-[260px] flex-1 items-start overflow-auto overscroll-contain bg-[radial-gradient(circle,#dfe5ef_0.8px,transparent_0.8px)] [background-size:24px_24px] px-3 py-4 sm:px-7 sm:py-5",
+    "relative flex min-h-[120px] flex-1 items-start overflow-auto overscroll-contain bg-[radial-gradient(circle,var(--diagram-grid)_0.8px,transparent_0.8px)] [background-size:24px_24px] px-2 py-3 sm:px-7 sm:py-5",
   simulationViewport: "bg-[#0b1222] bg-none px-0 py-0 sm:px-0 sm:py-0",
   diagramFrame: "m-auto shrink-0",
   diagramFrameFit: "max-w-[1040px]",
   board: "h-full w-full min-w-0 select-none",
   diagramFit: "lg:max-h-[calc(100dvh-360px)] lg:min-h-[240px]",
   diagramFullscreen: "max-h-[calc(100dvh-270px)] min-h-[240px]",
-  mediaOverlay: "relative z-20 flex w-full shrink-0 flex-col bg-white",
+  mediaOverlay: "relative z-20 flex w-full shrink-0 flex-col bg-board",
   visualTakeaway:
-    "flex shrink-0 items-center justify-center gap-2 border-t border-indigo-100/70 bg-indigo-50/45 px-4 py-3 text-center text-xs font-medium leading-relaxed text-indigo-800 sm:text-sm",
-  preparationStatus: "pb-1 text-[11px] leading-relaxed text-slate-500",
+    "flex shrink-0 items-center justify-center gap-2 border-t border-border bg-primary/5 px-3 py-2 text-center text-[11px] font-medium leading-snug text-primary sm:text-xs",
+  preparationStatus: "pb-1 text-[11px] leading-relaxed text-muted-foreground",
   caption:
-    "flex min-h-16 w-full items-center justify-center px-5 pb-4 pt-2 text-center sm:px-10",
+    "flex min-h-12 w-full items-center justify-center px-3 py-2 text-center sm:min-h-16 sm:px-10 sm:py-3",
   subtitleStack: "grid w-full place-items-center",
   subtitleMeasure:
-    "invisible col-start-1 row-start-1 max-w-[62ch] text-pretty text-[13px] leading-[1.7] sm:text-sm",
+    "invisible col-start-1 row-start-1 max-w-[62ch] text-pretty text-xs leading-relaxed sm:text-sm",
   subtitleText:
-    "col-start-1 row-start-1 max-w-[62ch] text-pretty text-[13px] leading-[1.7] text-slate-600 empty:hidden sm:text-sm",
+    "col-start-1 row-start-1 max-w-[62ch] text-pretty text-xs leading-relaxed text-foreground/80 empty:hidden sm:text-sm",
   player:
-    "flex w-full flex-col border-t border-slate-100 bg-slate-50/65 px-4 pb-3 pt-2 sm:px-5",
+    "flex w-full flex-col border-t border-border bg-muted/35 px-3 pb-1.5 pt-1 sm:px-5 sm:pb-3 sm:pt-2",
   playerControls: "flex min-h-11 items-center gap-2 sm:gap-3",
   playButton:
-    "size-11 shrink-0 rounded-full bg-primary text-white shadow-sm shadow-primary/15 hover:bg-primary/90 sm:size-9",
+    "size-11 shrink-0 rounded-full bg-primary text-primary-foreground shadow-sm shadow-primary/15 hover:bg-primary/90 sm:size-9",
   mediaButton:
-    "size-11 shrink-0 rounded-lg text-slate-500 hover:bg-slate-200/60 hover:text-slate-900 sm:size-9",
+    "size-11 shrink-0 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground sm:size-9",
   mediaTime:
-    "ml-1 whitespace-nowrap font-mono text-[11px] tabular-nums text-slate-500",
+    "ml-1 whitespace-nowrap font-mono text-[11px] tabular-nums text-muted-foreground",
   speedButton:
-    "ml-auto h-11 w-12 rounded-lg px-0 text-[11px] font-medium text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 sm:h-9",
+    "ml-auto h-11 w-12 rounded-lg px-0 text-[11px] font-medium text-foreground/80 hover:bg-accent hover:text-foreground sm:h-9",
   mediaTimeline:
-    "py-2 [&_[data-slot=slider-track]]:h-1 [&_[data-slot=slider-track]]:bg-slate-200 [&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:size-3 [&_[data-slot=slider-thumb]]:border-2 [&_[data-slot=slider-thumb]]:border-white [&_[data-slot=slider-thumb]]:bg-primary [&_[data-slot=slider-thumb]]:shadow-sm",
+    "py-2 [&_[data-slot=slider-track]]:h-1 [&_[data-slot=slider-track]]:bg-border [&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:size-3 [&_[data-slot=slider-thumb]]:border-2 [&_[data-slot=slider-thumb]]:border-white [&_[data-slot=slider-thumb]]:bg-primary [&_[data-slot=slider-thumb]]:shadow-sm",
   loading:
     "absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-background/90 px-6 text-center backdrop-blur-sm",
   error:
@@ -73,20 +73,20 @@ export const lessonStyles = {
 };
 
 export const boardColors = {
-  violet: "#7950b0",
-  cyan: "#246b9a",
-  amber: "#956019",
-  green: "#286f57",
-  // Keep the schema's neutral color name; render it as dark ink on light paper.
-  white: "#202938",
-  muted: "#606b7d",
+  violet: "var(--diagram-indigo)",
+  cyan: "var(--diagram-cyan)",
+  amber: "var(--diagram-amber)",
+  green: "var(--diagram-teal)",
+  // Preserve legacy schema names while adapting their contrast to the theme.
+  white: "var(--diagram-ink)",
+  muted: "var(--diagram-muted)",
 };
 
 export const visualizationColors = {
-  indigo: { ink: "#4055ce", soft: "#eef1ff" },
-  teal: { ink: "#178071", soft: "#e5f5ef" },
-  amber: { ink: "#a76d1d", soft: "#fff3dc" },
-  rose: { ink: "#b84c74", soft: "#fbeaf1" },
+  indigo: { ink: "var(--diagram-indigo)", soft: "var(--diagram-indigo-soft)" },
+  teal: { ink: "var(--diagram-teal)", soft: "var(--diagram-teal-soft)" },
+  amber: { ink: "var(--diagram-amber)", soft: "var(--diagram-amber-soft)" },
+  rose: { ink: "var(--diagram-rose)", soft: "var(--diagram-rose-soft)" },
 };
 
 export const moonSceneStyles = {

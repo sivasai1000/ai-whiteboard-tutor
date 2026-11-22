@@ -51,7 +51,7 @@ export function useConversationChat(conversation, model) {
         );
       else if (finishReason === "length")
         setNotice(
-          "The answer reached its length limit. Ask Braynix to continue if you need more detail.",
+          "The answer reached its length limit. Ask Look to continue if you need more detail.",
         );
     },
   });

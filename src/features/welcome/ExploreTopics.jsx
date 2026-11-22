@@ -96,7 +96,7 @@ export function ExploreTopics() {
           role="status"
           className="py-16 text-center text-sm text-muted-foreground"
         >
-          No suggestions match. You can still ask Braynix about any topic from
+          No suggestions match. You can still ask Look about any topic from
           New Lesson.
         </p>
       )}

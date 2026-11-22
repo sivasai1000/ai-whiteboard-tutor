@@ -112,12 +112,18 @@ export function Whiteboard({
   const [zoom, setZoom] = useState(1);
   const viewport = useRef(null);
   const [compact, setCompact] = useState(false);
+  const [scrollable, setScrollable] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   useEffect(() => {
-    const observer = new ResizeObserver(([entry]) =>
-      setCompact(entry.contentRect.width < 620),
-    );
+    const observer = new ResizeObserver(() => {
+      setCompact(viewport.current.clientWidth < 620);
+      setScrollable(
+        viewport.current.scrollHeight > viewport.current.clientHeight + 8,
+      );
+    });
     observer.observe(viewport.current);
+    if (viewport.current.firstElementChild)
+      observer.observe(viewport.current.firstElementChild);
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const change = () => setReducedMotion(media.matches);
     change();
@@ -126,7 +132,30 @@ export function Whiteboard({
       observer.disconnect();
       media.removeEventListener("change", change);
     };
-  }, []);
+  }, [scene.id]);
+  useEffect(() => {
+    // On a phone, keep the object named by the current spoken step in view.
+    // Run only at cue boundaries; manual scrolling stays free between cues.
+    if (!compact || zoom !== 1) return;
+    const frame = requestAnimationFrame(() => {
+      const element = viewport.current;
+      const focused = element?.querySelector('[data-focused="true"]');
+      if (!focused) return;
+      const board = element.getBoundingClientRect();
+      const target = focused.getBoundingClientRect();
+      if (target.top < board.top + 8 || target.bottom > board.bottom - 8) {
+        element.scrollTo({
+          top:
+            element.scrollTop +
+            target.top -
+            board.top -
+            Math.max(12, (board.height - target.height) / 2),
+          behavior: "instant",
+        });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [scene.id, stepIndex, compact, zoom]);
   const Diagram =
     scene.visual?.layout === MOON_LAYOUT ? MoonPhaseScene : VisualDiagram;
   const zoomClass = {
@@ -141,7 +170,14 @@ export function Whiteboard({
           <span className={s.boardMark}>
             <PenLine className="size-3.5" />
           </span>
-          <span className="max-[360px]:hidden">Whiteboard</span>
+          <span className="max-[360px]:hidden">
+            Whiteboard
+            {scrollable && (
+              <span className="block text-[9px] font-normal text-muted-foreground">
+                Scroll to explore
+              </span>
+            )}
+          </span>
           {scene.steps && (
             <span className={s.boardStep}>
               Step {stepIndex + 1} / {scene.steps.length}
@@ -165,7 +201,7 @@ export function Whiteboard({
             size="sm"
             className={s.fitButton}
             aria-label="Fit whiteboard to screen"
-            title="Fit drawing to the board"
+            title="Fit diagram to board width"
             onClick={() => setZoom(1)}
           >
             {Math.round(zoom * 100)}%
@@ -206,12 +242,12 @@ export function Whiteboard({
           s.boardViewport,
           scene.visual?.layout === MOON_LAYOUT && s.simulationViewport,
         )}
-        tabIndex={zoom > 1 ? 0 : undefined}
-        role={zoom > 1 ? "region" : undefined}
+        tabIndex={0}
+        role="region"
         aria-label={
           zoom > 1
             ? "Zoomed whiteboard. Scroll to explore the diagram."
-            : undefined
+            : "Whiteboard diagram. Scroll to explore."
         }
       >
         {scene.visual ? (

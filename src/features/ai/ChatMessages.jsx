@@ -87,7 +87,7 @@ export function ChatMessages({ messages, busy, status, onRetry }) {
                   <Message
                     align={user ? "end" : "start"}
                     data-testid={`ai-message-${message.role}`}
-                    aria-label={user ? "You" : "Braynix"}
+                    aria-label={user ? "You" : "Look"}
                   >
                     <MessageContent>
                       {user ? (
@@ -103,7 +103,7 @@ export function ChatMessages({ messages, busy, status, onRetry }) {
                       ) : (
                         <>
                           <div className="mb-1 flex items-center gap-2 text-xs font-medium">
-                            <BrandMark className="size-5" /> Braynix
+                            <BrandMark className="size-5" /> Look
                           </div>
                           <Streamdown
                             className={s.assistantText}
@@ -142,7 +142,7 @@ export function ChatMessages({ messages, busy, status, onRetry }) {
                 className="flex items-center gap-3 text-xs text-muted-foreground"
               >
                 <BrandMark className="size-5 motion-safe:animate-pulse" />{" "}
-                Braynix is thinking…
+                Look is thinking…
               </div>
             )}
           </MessageScrollerContent>

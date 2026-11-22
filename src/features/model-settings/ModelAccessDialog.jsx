@@ -22,10 +22,10 @@ export function ModelAccessDialog({
 }) {
   const { name, email } = modelAccessContact;
   const subject = encodeURIComponent(
-    `Braynix · Access to ${model?.label || "an AI model"}`,
+    `Look · Access to ${model?.label || "an AI model"}`,
   );
   const body = encodeURIComponent(
-    `Hi ${name},\n\nI'd like to request access to ${model?.label || "another AI model"} in Braynix.\n\nThank you.`,
+    `Hi ${name},\n\nI'd like to request access to ${model?.label || "another AI model"} in Look.\n\nThank you.`,
   );
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

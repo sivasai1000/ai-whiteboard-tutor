@@ -35,13 +35,13 @@ export function ChatComposer({
     >
       <InputGroup className={s.shell}>
         <label htmlFor="ai-chat-input" className="sr-only">
-          Message Braynix
+          Message Look
         </label>
         <InputGroupTextarea
           id="ai-chat-input"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder="Message Braynix…"
+          placeholder="Message Look…"
           rows={2}
           maxLength={MAX_CHAT_INPUT}
           disabled={disabled || preparing}

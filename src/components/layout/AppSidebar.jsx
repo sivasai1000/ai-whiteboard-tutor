@@ -8,6 +8,7 @@ import { useLessons } from "@/features/library/LessonProvider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "./Brand";
+import { ThemeToggle } from "./ThemeToggle";
 import { NewLessonLink } from "./NewLessonLink";
 import { NewChatLink } from "@/features/ai/NewChatLink";
 import { ConversationHistory } from "@/features/ai/ConversationHistory";
@@ -24,14 +25,17 @@ export function AppSidebar({ onNavigate }) {
 
   return (
     <div className={s.sidebar}>
-      <Link
-        href="/"
-        onClick={onNavigate}
-        className={s.brand}
-        aria-label="Braynix home"
-      >
-        <BrandMark /> Braynix
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          href="/"
+          onClick={onNavigate}
+          className={s.brand}
+          aria-label="Look home"
+        >
+          <BrandMark /> Look
+        </Link>
+        <ThemeToggle />
+      </div>
       <WorkspaceSwitcher isChat={isChat} onNavigate={onNavigate} />
       <Button asChild className={s.newLesson}>
         <NewLink
